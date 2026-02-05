@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS contracts (
   id SERIAL PRIMARY KEY,
   energy_type VARCHAR(50) NOT NULL,
-  quantity_mwh NUMERIC(12, 2) NOT NULL,
-  price_per_mwh NUMERIC(10, 2) NOT NULL,
+  quantity_mwh DOUBLE PRECISION NOT NULL,
+  price_per_mwh DOUBLE PRECISION NOT NULL,
   delivery_start DATE NOT NULL,
   delivery_end DATE NOT NULL,
   location VARCHAR(80) NOT NULL,
