@@ -1,0 +1,31 @@
+erDiagram
+  contracts {
+    SERIAL id PK
+    VARCHAR energy_type
+    NUMERIC quantity_mwh
+    NUMERIC price_per_mwh
+    DATE delivery_start
+    DATE delivery_end
+    VARCHAR location
+    VARCHAR status
+  }
+  users {
+    SERIAL id PK
+    VARCHAR name
+  }
+  portfolios {
+    SERIAL id PK
+    INTEGER user_id FK
+    TIMESTAMPTZ created_at
+    TIMESTAMPTZ updated_at
+  }
+  portfolio_holdings {
+    SERIAL id PK
+    INTEGER portfolio_id FK
+    INTEGER contract_id FK
+    TIMESTAMPTZ added_at
+  }
+
+  users ||--|| portfolios : owns
+  portfolios ||--o{ portfolio_holdings : includes
+  contracts ||--o{ portfolio_holdings : contains
