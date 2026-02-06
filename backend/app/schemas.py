@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 from enum import Enum
 
 from pydantic import BaseModel, Field, model_validator
@@ -21,8 +22,8 @@ class ContractStatus(str, Enum):
 
 class ContractBase(BaseModel):
     energy_type: EnergyType
-    quantity_mwh: float = Field(gt=0)
-    price_per_mwh: float = Field(gt=0)
+    quantity_mwh: Decimal = Field(gt=0, max_digits=18, decimal_places=3)
+    price_per_mwh: Decimal = Field(gt=0, max_digits=18, decimal_places=6)
     delivery_start: date
     delivery_end: date
     location: str = Field(min_length=2, max_length=80)
@@ -41,8 +42,18 @@ class ContractCreate(ContractBase):
 
 class ContractUpdate(BaseModel):
     energy_type: EnergyType | None = None
-    quantity_mwh: float | None = Field(default=None, gt=0)
-    price_per_mwh: float | None = Field(default=None, gt=0)
+    quantity_mwh: Decimal | None = Field(
+        default=None,
+        gt=0,
+        max_digits=18,
+        decimal_places=3,
+    )
+    price_per_mwh: Decimal | None = Field(
+        default=None,
+        gt=0,
+        max_digits=18,
+        decimal_places=6,
+    )
     delivery_start: date | None = None
     delivery_end: date | None = None
     location: str | None = Field(default=None, min_length=2, max_length=80)
@@ -59,10 +70,10 @@ class ContractUpdate(BaseModel):
 
 class ContractFilters(BaseModel):
     energy_types: list[EnergyType] | None = None
-    price_min: float | None = Field(default=None, ge=0)
-    price_max: float | None = Field(default=None, ge=0)
-    quantity_min: float | None = Field(default=None, ge=0)
-    quantity_max: float | None = Field(default=None, ge=0)
+    price_min: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=6)
+    price_max: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=6)
+    quantity_min: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=3)
+    quantity_max: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=3)
     location: str | None = Field(default=None, min_length=2, max_length=80)
     delivery_start_from: date | None = None
     delivery_end_to: date | None = None
