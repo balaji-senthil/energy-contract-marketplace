@@ -42,3 +42,32 @@ export interface ContractFilterState {
   deliveryStartFrom: string;
   deliveryEndTo: string;
 }
+
+export type NumericValue = number | string;
+
+export interface PortfolioHolding {
+  id: number;
+  added_at: string;
+  contract: Contract;
+}
+
+export interface PortfolioRead {
+  user_id: number;
+  holdings: PortfolioHolding[];
+}
+
+export interface PortfolioEnergyBreakdown {
+  energy_type: EnergyType;
+  total_contracts: number;
+  total_capacity_mwh: NumericValue;
+  total_cost: NumericValue;
+  weighted_avg_price_per_mwh: NumericValue;
+}
+
+export interface PortfolioMetrics {
+  total_contracts: number;
+  total_capacity_mwh: NumericValue;
+  total_cost: NumericValue;
+  weighted_avg_price_per_mwh: NumericValue;
+  breakdown_by_energy_type: PortfolioEnergyBreakdown[];
+}
