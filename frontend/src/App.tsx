@@ -4,6 +4,7 @@ import ContractFilters from "./components/ContractFilters";
 import ContractTable from "./components/ContractTable";
 import { fetchContracts } from "./api/contractsApi";
 import type { Contract, ContractApiFilters, ContractFilterState } from "./types/contracts";
+import { PRICE_RANGE, QUANTITY_RANGE } from "./types/contracts";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
@@ -17,10 +18,10 @@ const App = () => {
   const [filters, setFilters] = useState<ContractFilterState>({
     energyTypes: [],
     status: "Any",
-    priceMin: "",
-    priceMax: "",
-    quantityMin: "",
-    quantityMax: "",
+    priceMin: String(PRICE_RANGE.min),
+    priceMax: String(PRICE_RANGE.max),
+    quantityMin: String(QUANTITY_RANGE.min),
+    quantityMax: String(QUANTITY_RANGE.max),
     location: "",
     deliveryStartFrom: "",
     deliveryEndTo: "",
@@ -95,8 +96,18 @@ const App = () => {
     let count = 0;
     if (filters.energyTypes.length > 0) count += 1;
     if (filters.status !== "Any") count += 1;
-    if (filters.priceMin.trim() || filters.priceMax.trim()) count += 1;
-    if (filters.quantityMin.trim() || filters.quantityMax.trim()) count += 1;
+    if (
+      Number(filters.priceMin) > PRICE_RANGE.min ||
+      Number(filters.priceMax) < PRICE_RANGE.max
+    ) {
+      count += 1;
+    }
+    if (
+      Number(filters.quantityMin) > QUANTITY_RANGE.min ||
+      Number(filters.quantityMax) < QUANTITY_RANGE.max
+    ) {
+      count += 1;
+    }
     if (filters.deliveryStartFrom || filters.deliveryEndTo) count += 1;
     if (filters.location.trim().length >= 2) count += 1;
     return count;
@@ -114,16 +125,16 @@ const App = () => {
     const priceMax = Number.parseFloat(filters.priceMax);
     const quantityMin = Number.parseFloat(filters.quantityMin);
     const quantityMax = Number.parseFloat(filters.quantityMax);
-    if (!Number.isNaN(priceMin)) {
+    if (!Number.isNaN(priceMin) && priceMin > PRICE_RANGE.min) {
       nextFilters.price_min = priceMin;
     }
-    if (!Number.isNaN(priceMax)) {
+    if (!Number.isNaN(priceMax) && priceMax < PRICE_RANGE.max) {
       nextFilters.price_max = priceMax;
     }
-    if (!Number.isNaN(quantityMin)) {
+    if (!Number.isNaN(quantityMin) && quantityMin > QUANTITY_RANGE.min) {
       nextFilters.quantity_min = quantityMin;
     }
-    if (!Number.isNaN(quantityMax)) {
+    if (!Number.isNaN(quantityMax) && quantityMax < QUANTITY_RANGE.max) {
       nextFilters.quantity_max = quantityMax;
     }
     const location = filters.location.trim();
@@ -159,10 +170,10 @@ const App = () => {
     setFilters({
       energyTypes: [],
       status: "Any",
-      priceMin: "",
-      priceMax: "",
-      quantityMin: "",
-      quantityMax: "",
+      priceMin: String(PRICE_RANGE.min),
+      priceMax: String(PRICE_RANGE.max),
+      quantityMin: String(QUANTITY_RANGE.min),
+      quantityMax: String(QUANTITY_RANGE.max),
       location: "",
       deliveryStartFrom: "",
       deliveryEndTo: "",

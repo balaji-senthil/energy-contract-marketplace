@@ -217,6 +217,23 @@ p {
   gap: 8px;
 }
 
+.filterRangeControl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterRangeValue {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.filterSlider {
+  width: 100%;
+  accent-color: #2563eb;
+}
+
 @media (max-width: 640px) {
   .filterRange {
     grid-template-columns: 1fr;
