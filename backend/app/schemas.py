@@ -57,6 +57,38 @@ class ContractUpdate(BaseModel):
         return self
 
 
+class ContractFilters(BaseModel):
+    energy_types: list[EnergyType] | None = None
+    price_min: float | None = Field(default=None, ge=0)
+    price_max: float | None = Field(default=None, ge=0)
+    quantity_min: float | None = Field(default=None, ge=0)
+    quantity_max: float | None = Field(default=None, ge=0)
+    location: str | None = Field(default=None, min_length=2, max_length=80)
+    delivery_start_from: date | None = None
+    delivery_end_to: date | None = None
+    # Optional status filter for list/search queries
+    status: ContractStatus | None = None
+    search: str | None = Field(default=None, min_length=2, max_length=120)
+
+    @model_validator(mode="after")
+    def validate_ranges(self) -> "ContractFilters":
+        if self.price_min is not None and self.price_max is not None and self.price_min > self.price_max:
+            raise ValueError("price_min must be less than or equal to price_max")
+        if (
+            self.quantity_min is not None
+            and self.quantity_max is not None
+            and self.quantity_min > self.quantity_max
+        ):
+            raise ValueError("quantity_min must be less than or equal to quantity_max")
+        if (
+            self.delivery_start_from is not None
+            and self.delivery_end_to is not None
+            and self.delivery_start_from > self.delivery_end_to
+        ):
+            raise ValueError("delivery_start_from must be on or before delivery_end_to")
+        return self
+
+
 class ContractRead(ContractBase):
     id: int
     model_config = {"from_attributes": True}
