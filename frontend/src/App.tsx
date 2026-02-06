@@ -91,6 +91,7 @@ const App = () => {
     }
     return `Contracts (${contracts.length})`;
   }, [contracts.length, status]);
+  const matchingCount = status === "success" ? contracts.length : null;
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -217,6 +218,7 @@ const App = () => {
           filters={filters}
           activeFilterCount={activeFilterCount}
           isFiltering={isFiltering}
+          matchingCount={matchingCount}
           onFiltersChange={setFilters}
           onReset={handleResetFilters}
         />

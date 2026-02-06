@@ -7,6 +7,7 @@ interface ContractFiltersProps {
   filters: ContractFilterState;
   activeFilterCount: number;
   isFiltering: boolean;
+  matchingCount: number | null;
   onFiltersChange: (next: ContractFilterState) => void;
   onReset: () => void;
 }
@@ -18,6 +19,7 @@ const ContractFilters = ({
   filters,
   activeFilterCount,
   isFiltering,
+  matchingCount,
   onFiltersChange,
   onReset,
 }: ContractFiltersProps) => {
@@ -117,6 +119,14 @@ const ContractFilters = ({
   };
 
   const noFiltersApplied: boolean = activeFilterCount === 0;
+  const matchingLabel =
+    noFiltersApplied || isFiltering
+      ? null
+      : matchingCount === null
+        ? null
+        : matchingCount === 0
+          ? "No matching results"
+          : `Matching results: ${matchingCount}`;
 
   return (
     <div className="filtersCard">
@@ -127,18 +137,23 @@ const ContractFilters = ({
         </div>
         <div className="filtersActions">
           <div className={`filterStatus ${isFiltering ? "filterStatusActive" : ""}`}>
-          <p className="filtersMeta">
-          {isFiltering ? "Applying filters..." : noFiltersApplied ? 'No active filters' : "Filters synced"}
-          </p>
-        </div>
-          <button 
-            disabled={noFiltersApplied || isFiltering} 
-            title= {noFiltersApplied ? 'No filters applied' : 'Clear all filters'}
-            className="secondaryButton" 
-            type="button" 
+            <p className="filtersMeta">
+              {isFiltering
+                ? "Applying filters..."
+                : noFiltersApplied
+                  ? "No active filters"
+                  : "Filters applied"}
+            </p>
+            {matchingLabel && <p className="filtersMeta">{matchingLabel}</p>}
+          </div>
+          <button
+            disabled={noFiltersApplied || isFiltering}
+            title={noFiltersApplied ? "No filters applied" : "Clear all filters"}
+            className="secondaryButton"
+            type="button"
             onClick={onReset}
-            >
-              Clear all
+          >
+            Clear all
           </button>
         </div>
       </div>
