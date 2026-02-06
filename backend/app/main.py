@@ -21,7 +21,7 @@ app = FastAPI(title="Energy Contract Marketplace", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173"], # TODO: add production frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
