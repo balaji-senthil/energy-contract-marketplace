@@ -11,6 +11,7 @@ const App = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [status, setStatus] = useState<LoadState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [filterErrorMessage, setFilterErrorMessage] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
   const [filters, setFilters] = useState<ContractFilterState>({
@@ -51,6 +52,7 @@ const App = () => {
         setStatus("loading");
       }
       setErrorMessage(null);
+      setFilterErrorMessage(null);
       const data = await fetchContracts({
         filters: apiFilters,
         offset: 0,
@@ -68,10 +70,15 @@ const App = () => {
         return;
       }
       const message = error instanceof Error ? error.message : "Unable to load contracts.";
-      setErrorMessage(message);
-      setStatus("error");
-    } finally {
       if (isFilterRequest) {
+        setFilterErrorMessage(message);
+      } else {
+        setErrorMessage(message);
+        setStatus("error");
+      }
+    } finally {
+      // Only clear filtering state if this is still the latest request
+      if (isFilterRequest && requestIdRef.current === requestId) {
         setIsFiltering(false);
       }
     }
@@ -202,6 +209,19 @@ const App = () => {
           onFiltersChange={setFilters}
           onReset={handleResetFilters}
         />
+
+        {filterErrorMessage && (
+          <div className="statusMessage statusError">
+            <p>{filterErrorMessage}</p>
+            <button
+              className="primaryButton"
+              onClick={() => loadContracts({ filters: appliedFilters, isFilterRequest: true })}
+              type="button"
+            >
+              Retry filters
+            </button>
+          </div>
+        )}
 
         {status === "loading" && <p className="statusMessage">Loading contracts...</p>}
 
