@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 
@@ -103,3 +103,31 @@ class ContractFilters(BaseModel):
 class ContractRead(ContractBase):
     id: int
     model_config = {"from_attributes": True}
+
+
+class PortfolioHoldingRead(BaseModel):
+    id: int
+    added_at: datetime
+    contract: ContractRead
+    model_config = {"from_attributes": True}
+
+
+class PortfolioRead(BaseModel):
+    user_id: int
+    holdings: list[PortfolioHoldingRead]
+
+
+class PortfolioEnergyBreakdown(BaseModel):
+    energy_type: EnergyType
+    total_contracts: int
+    total_capacity_mwh: Decimal
+    total_cost: Decimal
+    weighted_avg_price_per_mwh: Decimal
+
+
+class PortfolioMetrics(BaseModel):
+    total_contracts: int
+    total_capacity_mwh: Decimal
+    total_cost: Decimal
+    weighted_avg_price_per_mwh: Decimal
+    breakdown_by_energy_type: list[PortfolioEnergyBreakdown]
