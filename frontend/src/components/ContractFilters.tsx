@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 import type { ContractFilterState, ContractStatus, EnergyType } from "../types/contracts";
-import { PRICE_RANGE, QUANTITY_RANGE } from "../types/contracts";
+import { PRICE_RANGE, QUANTITY_RANGE } from "../constants/filters";
 import { formatCurrency, formatNumber } from "../utils/format";
 
 interface ContractFiltersProps {

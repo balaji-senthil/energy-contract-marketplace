@@ -4,7 +4,7 @@ import ContractFilters from "./components/ContractFilters";
 import ContractTable from "./components/ContractTable";
 import { fetchContracts } from "./api/contractsApi";
 import type { Contract, ContractApiFilters, ContractFilterState } from "./types/contracts";
-import { PRICE_RANGE, QUANTITY_RANGE } from "./types/contracts";
+import { PRICE_RANGE, QUANTITY_RANGE } from "./constants/filters";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
