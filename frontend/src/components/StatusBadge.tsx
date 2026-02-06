@@ -4,7 +4,6 @@ interface StatusBadgeProps {
   status: ContractStatus;
 }
 
-// todo: add css classes
 const statusCssClassMap: Record<ContractStatus, string> = {
   Available: "statusBadge statusBadgeAvailable",
   Reserved: "statusBadge statusBadgeReserved",
