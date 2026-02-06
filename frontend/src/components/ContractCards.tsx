@@ -4,9 +4,17 @@ import StatusBadge from "./StatusBadge";
 
 interface ContractCardsProps {
   contracts: Contract[];
+  portfolioContractIds: Set<number>;
+  updatingContractIds: Set<number>;
+  onAddToPortfolio: (contractId: number) => void;
 }
 
-const ContractCards = ({ contracts }: ContractCardsProps) => {
+const ContractCards = ({
+  contracts,
+  portfolioContractIds,
+  updatingContractIds,
+  onAddToPortfolio,
+}: ContractCardsProps) => {
   return (
     <div className="cardsGrid">
       {contracts.map((contract) => (
@@ -41,6 +49,26 @@ const ContractCards = ({ contracts }: ContractCardsProps) => {
               <p className="cardLabel">Location</p>
               <p className="cardValue">{contract.location}</p>
             </div>
+          </div>
+          <div className="cardActions">
+            <button
+              className="primaryButton"
+              type="button"
+              onClick={() => onAddToPortfolio(contract.id)}
+              disabled={
+                contract.status !== "Available" ||
+                portfolioContractIds.has(contract.id) ||
+                updatingContractIds.has(contract.id)
+              }
+            >
+              {updatingContractIds.has(contract.id)
+                ? "Adding..."
+                : portfolioContractIds.has(contract.id)
+                  ? "In portfolio"
+                  : contract.status === "Available"
+                    ? "Add to Portfolio"
+                    : "Unavailable"}
+            </button>
           </div>
         </article>
       ))}

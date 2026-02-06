@@ -4,9 +4,17 @@ import StatusBadge from "./StatusBadge";
 
 interface ContractTableProps {
   contracts: Contract[];
+  portfolioContractIds: Set<number>;
+  updatingContractIds: Set<number>;
+  onAddToPortfolio: (contractId: number) => void;
 }
 
-const ContractTable = ({ contracts }: ContractTableProps) => {
+const ContractTable = ({
+  contracts,
+  portfolioContractIds,
+  updatingContractIds,
+  onAddToPortfolio,
+}: ContractTableProps) => {
   return (
     <div className="tableWrapper">
       <table className="contractsTable">
@@ -19,6 +27,7 @@ const ContractTable = ({ contracts }: ContractTableProps) => {
             <th>Delivery Window</th>
             <th>Location</th>
             <th>Status</th>
+            <th>Portfolio</th>
           </tr>
         </thead>
         <tbody>
@@ -32,6 +41,26 @@ const ContractTable = ({ contracts }: ContractTableProps) => {
               <td>{contract.location}</td>
               <td>
                 <StatusBadge status={contract.status} />
+              </td>
+              <td>
+                <button
+                  className="primaryButton compactButton"
+                  type="button"
+                  onClick={() => onAddToPortfolio(contract.id)}
+                  disabled={
+                    contract.status !== "Available" ||
+                    portfolioContractIds.has(contract.id) ||
+                    updatingContractIds.has(contract.id)
+                  }
+                >
+                  {updatingContractIds.has(contract.id)
+                    ? "Adding..."
+                    : portfolioContractIds.has(contract.id)
+                      ? "In portfolio"
+                      : contract.status === "Available"
+                        ? "Add"
+                        : "Unavailable"}
+                </button>
               </td>
             </tr>
           ))}

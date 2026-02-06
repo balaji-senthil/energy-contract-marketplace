@@ -2,11 +2,26 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ContractCards from "./components/ContractCards";
 import ContractFilters from "./components/ContractFilters";
 import ContractTable from "./components/ContractTable";
+import PortfolioBuilder from "./components/PortfolioBuilder";
 import { fetchContracts } from "./api/contractsApi";
-import type { Contract, ContractApiFilters, ContractFilterState } from "./types/contracts";
+import {
+  addContractToPortfolio,
+  fetchPortfolio,
+  fetchPortfolioMetrics,
+  removeContractFromPortfolio,
+} from "./api/portfolioApi";
+import type {
+  Contract,
+  ContractApiFilters,
+  ContractFilterState,
+  PortfolioHolding,
+  PortfolioMetrics,
+} from "./types/contracts";
 import { PRICE_RANGE, QUANTITY_RANGE } from "./constants/filters";
 
 type LoadState = "idle" | "loading" | "success" | "error";
+
+const PORTFOLIO_USER_ID = 1;
 
 const App = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -15,6 +30,13 @@ const App = () => {
   const [filterErrorMessage, setFilterErrorMessage] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [portfolioStatus, setPortfolioStatus] = useState<LoadState>("idle");
+  const [portfolioErrorMessage, setPortfolioErrorMessage] = useState<string | null>(null);
+  const [portfolioHoldings, setPortfolioHoldings] = useState<PortfolioHolding[]>([]);
+  const [portfolioMetrics, setPortfolioMetrics] = useState<PortfolioMetrics | null>(null);
+  const [portfolioUpdatingIds, setPortfolioUpdatingIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [filters, setFilters] = useState<ContractFilterState>({
     energyTypes: [],
     status: "Any",
@@ -151,6 +173,28 @@ const App = () => {
     return nextFilters;
   }, [filters]);
 
+  const portfolioContractIds = useMemo(() => {
+    return new Set(portfolioHoldings.map((holding) => holding.contract.id));
+  }, [portfolioHoldings]);
+
+  const loadPortfolio = useCallback(async () => {
+    try {
+      setPortfolioStatus("loading");
+      setPortfolioErrorMessage(null);
+      const [portfolio, metrics] = await Promise.all([
+        fetchPortfolio(PORTFOLIO_USER_ID),
+        fetchPortfolioMetrics(PORTFOLIO_USER_ID),
+      ]);
+      setPortfolioHoldings(portfolio.holdings);
+      setPortfolioMetrics(metrics);
+      setPortfolioStatus("success");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to load portfolio.";
+      setPortfolioErrorMessage(message);
+      setPortfolioStatus("error");
+    }
+  }, []);
+
   useEffect(() => {
     // adding 250ms delay to avoid rapid loading of contracts when filters are changed
     const delay = isFirstLoadRef.current ? 0 : 250;
@@ -166,6 +210,66 @@ const App = () => {
 
     return () => window.clearTimeout(handler);
   }, [appliedFilters, loadContracts]);
+
+  useEffect(() => {
+    void loadPortfolio();
+  }, [loadPortfolio]);
+
+  const handleAddToPortfolio = useCallback(
+    async (contractId: number) => {
+      if (portfolioContractIds.has(contractId) || portfolioUpdatingIds.has(contractId)) {
+        return;
+      }
+      setPortfolioUpdatingIds((prev) => {
+        const next = new Set(prev);
+        next.add(contractId);
+        return next;
+      });
+      try {
+        await addContractToPortfolio(PORTFOLIO_USER_ID, contractId);
+        await loadPortfolio();
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to add contract to portfolio.";
+        setPortfolioErrorMessage(message);
+      } finally {
+        setPortfolioUpdatingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(contractId);
+          return next;
+        });
+      }
+    },
+    [loadPortfolio, portfolioContractIds, portfolioUpdatingIds],
+  );
+
+  const handleRemoveFromPortfolio = useCallback(
+    async (contractId: number) => {
+      if (portfolioUpdatingIds.has(contractId)) {
+        return;
+      }
+      setPortfolioUpdatingIds((prev) => {
+        const next = new Set(prev);
+        next.add(contractId);
+        return next;
+      });
+      try {
+        await removeContractFromPortfolio(PORTFOLIO_USER_ID, contractId);
+        await loadPortfolio();
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to remove contract from portfolio.";
+        setPortfolioErrorMessage(message);
+      } finally {
+        setPortfolioUpdatingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(contractId);
+          return next;
+        });
+      }
+    },
+    [loadPortfolio, portfolioUpdatingIds],
+  );
 
   const handleResetFilters = useCallback(() => {
     setFilters({
@@ -257,11 +361,31 @@ const App = () => {
 
         {status === "success" && contracts.length > 0 && (
           <>
-            <ContractTable contracts={contracts} />
-            <ContractCards contracts={contracts} />
+            <ContractTable
+              contracts={contracts}
+              portfolioContractIds={portfolioContractIds}
+              updatingContractIds={portfolioUpdatingIds}
+              onAddToPortfolio={handleAddToPortfolio}
+            />
+            <ContractCards
+              contracts={contracts}
+              portfolioContractIds={portfolioContractIds}
+              updatingContractIds={portfolioUpdatingIds}
+              onAddToPortfolio={handleAddToPortfolio}
+            />
           </>
         )}
       </section>
+
+      <PortfolioBuilder
+        holdings={portfolioHoldings}
+        metrics={portfolioMetrics}
+        status={portfolioStatus}
+        errorMessage={portfolioErrorMessage}
+        onRetry={loadPortfolio}
+        onRemove={handleRemoveFromPortfolio}
+        removingIds={portfolioUpdatingIds}
+      />
     </div>
   );
 };
