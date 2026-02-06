@@ -1,15 +1,53 @@
 from collections.abc import Sequence
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Contract
-from app.schemas import ContractCreate, ContractUpdate
+from app.schemas import ContractCreate, ContractFilters, ContractUpdate
 
 
-async def list_contracts(*, session: AsyncSession, offset: int, limit: int) -> Sequence[Contract]:
-    statement = select(Contract).offset(offset).limit(limit).order_by(Contract.id)
+async def list_contracts(
+    *, session: AsyncSession, offset: int, limit: int, filters: ContractFilters
+) -> Sequence[Contract]:
+    statement = select(Contract)
+    filter_conditions = []
+
+    if filters.energy_types:
+        filter_conditions.append(
+            Contract.energy_type.in_([energy_type.value for energy_type in filters.energy_types])
+        )
+    if filters.status:
+        filter_conditions.append(Contract.status == filters.status.value)
+    if filters.price_min is not None:
+        filter_conditions.append(Contract.price_per_mwh >= filters.price_min)
+    if filters.price_max is not None:
+        filter_conditions.append(Contract.price_per_mwh <= filters.price_max)
+    if filters.quantity_min is not None:
+        filter_conditions.append(Contract.quantity_mwh >= filters.quantity_min)
+    if filters.quantity_max is not None:
+        filter_conditions.append(Contract.quantity_mwh <= filters.quantity_max)
+    if filters.location:
+        filter_conditions.append(Contract.location.ilike(f"%{filters.location.strip()}%"))
+    if filters.delivery_start_from is not None:
+        filter_conditions.append(Contract.delivery_end >= filters.delivery_start_from)
+    if filters.delivery_end_to is not None:
+        filter_conditions.append(Contract.delivery_start <= filters.delivery_end_to)
+    if filters.search:
+        search_term = f"%{filters.search.strip()}%"
+        filter_conditions.append(
+            or_(
+                Contract.location.ilike(search_term),
+                Contract.energy_type.ilike(search_term),
+                Contract.status.ilike(search_term),
+            )
+        )
+
+    if filter_conditions:
+        statement = statement.where(*filter_conditions)
+
+    statement = statement.order_by(Contract.id).offset(offset).limit(limit)
     result = await session.execute(statement)
     return result.scalars().all()
 
