@@ -21,6 +21,13 @@ const ContractFilters = ({
   onFiltersChange,
   onReset,
 }: ContractFiltersProps) => {
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
   const priceMinValue = Number.isNaN(Number(filters.priceMin))
     ? PRICE_RANGE.min
     : Number(filters.priceMin);
@@ -67,6 +74,46 @@ const ContractFilters = ({
     // Keep max at or above current min to avoid crossing sliders.
     const clampedValue = Math.max(nextValue, quantityMinValue);
     onFiltersChange({ ...filters, quantityMax: String(clampedValue) });
+  };
+
+  const handleDeliveryStartChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextStart = event.target.value;
+    if (!nextStart) {
+      onFiltersChange({ ...filters, deliveryStartFrom: "" });
+      return;
+    }
+
+    const today = getTodayDateString();
+    let nextEnd = filters.deliveryEndTo || today;
+    if (nextStart > nextEnd) {
+      nextEnd = nextStart;
+    }
+
+    onFiltersChange({
+      ...filters,
+      deliveryStartFrom: nextStart,
+      deliveryEndTo: nextEnd,
+    });
+  };
+
+  const handleDeliveryEndChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextEnd = event.target.value;
+    if (!nextEnd) {
+      onFiltersChange({ ...filters, deliveryEndTo: "" });
+      return;
+    }
+
+    const today = getTodayDateString();
+    let nextStart = filters.deliveryStartFrom || today;
+    if (nextStart > nextEnd) {
+      nextStart = nextEnd;
+    }
+
+    onFiltersChange({
+      ...filters,
+      deliveryStartFrom: nextStart,
+      deliveryEndTo: nextEnd,
+    });
   };
 
   const noFiltersApplied: boolean = activeFilterCount === 0;
@@ -211,18 +258,14 @@ const ContractFilters = ({
               className="filterInput"
               type="date"
               value={filters.deliveryStartFrom}
-              onChange={(event) =>
-                onFiltersChange({ ...filters, deliveryStartFrom: event.target.value })
-              }
+              onChange={handleDeliveryStartChange}
             />
             <span className="filterRangeSeparator">to</span>
             <input
               className="filterInput"
               type="date"
               value={filters.deliveryEndTo}
-              onChange={(event) =>
-                onFiltersChange({ ...filters, deliveryEndTo: event.target.value })
-              }
+              onChange={handleDeliveryEndChange}
             />
           </div>
         </div>
