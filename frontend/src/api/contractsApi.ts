@@ -1,5 +1,9 @@
 import { getApiBaseUrl } from "./client";
-import type { Contract, ContractApiFilters } from "../types/contracts";
+import type {
+  Contract,
+  ContractApiFilters,
+  ContractComparisonResponse,
+} from "../types/contracts";
 
 interface FetchContractsOptions {
   filters?: ContractApiFilters;
@@ -60,4 +64,33 @@ export const fetchContracts = async ({
   }
 
   return (await response.json()) as Contract[];
+};
+
+interface FetchContractComparisonOptions {
+  ids: number[];
+  signal?: AbortSignal;
+}
+
+export const fetchContractComparison = async ({
+  ids,
+  signal,
+}: FetchContractComparisonOptions): Promise<ContractComparisonResponse> => {
+  const params = new URLSearchParams();
+  ids.forEach((id) => {
+    params.append("ids", String(id));
+  });
+
+  const response = await fetch(`${getApiBaseUrl()}/contracts/compare?${params.toString()}`, {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Unable to compare contracts.");
+  }
+
+  return (await response.json()) as ContractComparisonResponse;
 };
