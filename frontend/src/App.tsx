@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ContractCards from "./components/ContractCards";
+import ContractComparisonPanel from "./components/ContractComparisonPanel";
 import ContractFilters from "./components/ContractFilters";
 import ContractTable from "./components/ContractTable";
 import PortfolioBuilder from "./components/PortfolioBuilder";
-import { fetchContracts } from "./api/contractsApi";
+import { fetchContractComparison, fetchContracts } from "./api/contractsApi";
 import {
   addContractToPortfolio,
   fetchPortfolio,
@@ -14,6 +15,7 @@ import type {
   Contract,
   ContractApiFilters,
   ContractFilterState,
+  ContractComparisonResponse,
   PortfolioHolding,
   PortfolioMetrics,
 } from "./types/contracts";
@@ -51,6 +53,12 @@ const App = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
   const isFirstLoadRef = useRef(true);
+  const comparisonAbortControllerRef = useRef<AbortController | null>(null);
+  const comparisonRequestIdRef = useRef(0);
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const [compareStatus, setCompareStatus] = useState<LoadState>("idle");
+  const [compareErrorMessage, setCompareErrorMessage] = useState<string | null>(null);
+  const [comparison, setComparison] = useState<ContractComparisonResponse | null>(null);
 
   const loadContracts = useCallback(
     async ({
@@ -105,7 +113,42 @@ const App = () => {
         setIsFiltering(false);
       }
     }
-  },[]);
+  }, []);
+
+  const loadComparison = useCallback(async (ids: number[]) => {
+    if (ids.length < 2) {
+      setComparison(null);
+      setCompareStatus("idle");
+      setCompareErrorMessage(null);
+      return;
+    }
+
+    const requestId = comparisonRequestIdRef.current + 1;
+    comparisonRequestIdRef.current = requestId;
+    if (comparisonAbortControllerRef.current) {
+      comparisonAbortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    comparisonAbortControllerRef.current = controller;
+
+    try {
+      setCompareStatus("loading");
+      setCompareErrorMessage(null);
+      const data = await fetchContractComparison({ ids, signal: controller.signal });
+      if (comparisonRequestIdRef.current !== requestId) {
+        return;
+      }
+      setComparison(data);
+      setCompareStatus("success");
+    } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "Unable to compare contracts.";
+      setCompareErrorMessage(message);
+      setCompareStatus("error");
+    }
+  }, []);
 
   const resultCountLabel = useMemo(() => {
     if (status !== "success") {
@@ -177,6 +220,9 @@ const App = () => {
     return new Set(portfolioHoldings.map((holding) => holding.contract.id));
   }, [portfolioHoldings]);
 
+  const selectedCompareIds = useMemo(() => new Set(compareIds), [compareIds]);
+  const isCompareSelectionFull = compareIds.length >= 3;
+
   const loadPortfolio = useCallback(async () => {
     try {
       setPortfolioStatus("loading");
@@ -214,6 +260,10 @@ const App = () => {
   useEffect(() => {
     void loadPortfolio();
   }, [loadPortfolio]);
+
+  useEffect(() => {
+    void loadComparison(compareIds);
+  }, [compareIds, loadComparison]);
 
   const handleAddToPortfolio = useCallback(
     async (contractId: number) => {
@@ -285,6 +335,26 @@ const App = () => {
     });
   }, []);
 
+  const handleToggleCompare = useCallback((contractId: number) => {
+    setCompareIds((prev) => {
+      if (prev.includes(contractId)) {
+        return prev.filter((id) => id !== contractId);
+      }
+      if (prev.length >= 3) {
+        return prev;
+      }
+      return [...prev, contractId];
+    });
+  }, []);
+
+  const handleClearComparison = useCallback(() => {
+    setCompareIds([]);
+  }, []);
+
+  const handleRetryComparison = useCallback(() => {
+    void loadComparison(compareIds);
+  }, [compareIds, loadComparison]);
+
   return (
     <div className="appShell">
       <header className="hero">
@@ -327,6 +397,16 @@ const App = () => {
           onReset={handleResetFilters}
         />
 
+        <ContractComparisonPanel
+          selectedIds={compareIds}
+          comparison={comparison}
+          status={compareStatus}
+          errorMessage={compareErrorMessage}
+          onClear={handleClearComparison}
+          onRetry={handleRetryComparison}
+          onRemove={handleToggleCompare}
+        />
+
         {filterErrorMessage && (
           <div className="statusMessage statusError">
             <p>{filterErrorMessage}</p>
@@ -366,12 +446,18 @@ const App = () => {
               portfolioContractIds={portfolioContractIds}
               updatingContractIds={portfolioUpdatingIds}
               onAddToPortfolio={handleAddToPortfolio}
+              selectedCompareIds={selectedCompareIds}
+              isCompareSelectionFull={isCompareSelectionFull}
+              onToggleCompare={handleToggleCompare}
             />
             <ContractCards
               contracts={contracts}
               portfolioContractIds={portfolioContractIds}
               updatingContractIds={portfolioUpdatingIds}
               onAddToPortfolio={handleAddToPortfolio}
+              selectedCompareIds={selectedCompareIds}
+              isCompareSelectionFull={isCompareSelectionFull}
+              onToggleCompare={handleToggleCompare}
             />
           </>
         )}

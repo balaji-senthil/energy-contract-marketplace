@@ -7,6 +7,9 @@ interface ContractCardsProps {
   portfolioContractIds: Set<number>;
   updatingContractIds: Set<number>;
   onAddToPortfolio: (contractId: number) => void;
+  selectedCompareIds: Set<number>;
+  isCompareSelectionFull: boolean;
+  onToggleCompare: (contractId: number) => void;
 }
 
 const ContractCards = ({
@@ -14,11 +17,17 @@ const ContractCards = ({
   portfolioContractIds,
   updatingContractIds,
   onAddToPortfolio,
+  selectedCompareIds,
+  isCompareSelectionFull,
+  onToggleCompare,
 }: ContractCardsProps) => {
   return (
     <div className="cardsGrid">
-      {contracts.map((contract) => (
-        <article className="contractCard" key={contract.id}>
+      {contracts.map((contract) => {
+        const isSelected = selectedCompareIds.has(contract.id);
+        const isCompareDisabled = !isSelected && isCompareSelectionFull;
+        return (
+          <article className="contractCard" key={contract.id}>
           <div className="cardHeader">
             <div>
               <p className="cardLabel">Contract</p>
@@ -52,6 +61,14 @@ const ContractCards = ({
           </div>
           <div className="cardActions">
             <button
+              className="secondaryButton compactButton"
+              type="button"
+              onClick={() => onToggleCompare(contract.id)}
+              disabled={isCompareDisabled}
+            >
+              {isSelected ? "Selected" : "Compare"}
+            </button>
+            <button
               className="primaryButton"
               type="button"
               onClick={() => onAddToPortfolio(contract.id)}
@@ -71,7 +88,8 @@ const ContractCards = ({
             </button>
           </div>
         </article>
-      ))}
+        );
+      })}
     </div>
   );
 };

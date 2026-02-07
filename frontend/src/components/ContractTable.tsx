@@ -7,6 +7,9 @@ interface ContractTableProps {
   portfolioContractIds: Set<number>;
   updatingContractIds: Set<number>;
   onAddToPortfolio: (contractId: number) => void;
+  selectedCompareIds: Set<number>;
+  isCompareSelectionFull: boolean;
+  onToggleCompare: (contractId: number) => void;
 }
 
 const ContractTable = ({
@@ -14,6 +17,9 @@ const ContractTable = ({
   portfolioContractIds,
   updatingContractIds,
   onAddToPortfolio,
+  selectedCompareIds,
+  isCompareSelectionFull,
+  onToggleCompare,
 }: ContractTableProps) => {
   return (
     <div className="tableWrapper">
@@ -28,11 +34,15 @@ const ContractTable = ({
             <th>Location</th>
             <th>Status</th>
             <th>Portfolio</th>
+            <th>Compare</th>
           </tr>
         </thead>
         <tbody>
-          {contracts.map((contract) => (
-            <tr key={contract.id}>
+          {contracts.map((contract) => {
+            const isSelected = selectedCompareIds.has(contract.id);
+            const isCompareDisabled = !isSelected && isCompareSelectionFull;
+            return (
+              <tr key={contract.id}>
               <td>#{contract.id}</td>
               <td>{contract.energy_type}</td>
               <td>{formatNumber(contract.quantity_mwh)}</td>
@@ -62,8 +72,20 @@ const ContractTable = ({
                         : "Unavailable"}
                 </button>
               </td>
+              <td>
+                <label className="compareToggle">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggleCompare(contract.id)}
+                    disabled={isCompareDisabled}
+                  />
+                  <span>{isSelected ? "Selected" : "Compare"}</span>
+                </label>
+              </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
