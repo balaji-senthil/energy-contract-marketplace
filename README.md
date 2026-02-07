@@ -20,6 +20,10 @@ Browse, filter, and compare energy supply contracts, then build a portfolio with
 - `backend/sql/`: `schema.sql` and `seed.sql`
 - `docker-compose.yml`: Full-stack local environment
 
+## Notes
+- Frontend notes: [`frontend/docs/notes.md`](frontend/docs/notes.md)
+- Backend notes: [`backend/docs/notes.md`](backend/docs/notes.md)
+
 ## Quick Start (Docker Compose)
 Prerequisites: Docker Desktop or Docker Engine + Compose.
 
