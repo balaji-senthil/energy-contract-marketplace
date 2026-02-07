@@ -1,5 +1,6 @@
 import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
-import { formatCurrency, formatDate, formatNumber } from "../utils/format";
+import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
+import StatusBadge from "./StatusBadge";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
@@ -161,6 +162,64 @@ const PortfolioBuilder = ({
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="portfolioHoldingsCards">
+              {holdings.map((holding) => (
+                <article className="contractCard" key={holding.id}>
+                  <div className="cardHeader">
+                    <div>
+                      <p className="cardLabel">Contract</p>
+                      <p className="cardValue">#{holding.contract.id}</p>
+                    </div>
+                    <StatusBadge status={holding.contract.status} />
+                  </div>
+                  <div className="cardBody">
+                    <div>
+                      <p className="cardLabel">Energy Type</p>
+                      <p className="cardValue">{holding.contract.energy_type}</p>
+                    </div>
+                    <div>
+                      <p className="cardLabel">Quantity</p>
+                      <p className="cardValue">
+                        {formatNumber(holding.contract.quantity_mwh)} MWh
+                      </p>
+                    </div>
+                    <div>
+                      <p className="cardLabel">Price / MWh</p>
+                      <p className="cardValue">
+                        {formatCurrency(holding.contract.price_per_mwh)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="cardLabel">Delivery Window</p>
+                      <p className="cardValue">
+                        {formatDateRange(
+                          holding.contract.delivery_start,
+                          holding.contract.delivery_end,
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="cardLabel">Location</p>
+                      <p className="cardValue">{holding.contract.location}</p>
+                    </div>
+                    <div>
+                      <p className="cardLabel">Added</p>
+                      <p className="cardValue">{formatDate(holding.added_at)}</p>
+                    </div>
+                  </div>
+                  <div className="cardActions">
+                    <button
+                      className="dangerButton"
+                      type="button"
+                      onClick={() => onRemove(holding.contract.id)}
+                      disabled={removingIds.has(holding.contract.id)}
+                    >
+                      {removingIds.has(holding.contract.id) ? "Removing..." : "Remove"}
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </div>
