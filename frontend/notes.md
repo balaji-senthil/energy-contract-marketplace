@@ -31,11 +31,13 @@
 ## Component Structure
 - `ContractFilters` handles filter inputs and reset behavior.
 - `ContractTable` and `ContractCards` render tabular and card views of the same data.
+- `ContractComparisonPanel` renders comparison selection, metrics, and side-by-side table.
 - `PortfolioBuilder` is responsible for summary and management of the current portfolio.
 
 ## Requirements Alignment
 - Table/card view is supported via `ContractTable` and `ContractCards`.
 - Key contract details are shown in both list views.
+- Contract comparison supports selecting 2-3 contracts, fetching comparison metrics, and highlighting min/max differences.
 - Filters use multiple input types: sliders for ranges, text inputs for search, multi-select energy type chips, and dropdown for Status select.
 - Filters are applied in near real time with a 250ms debounce.
 - Clear filters is available via the reset action in `ContractFilters`.

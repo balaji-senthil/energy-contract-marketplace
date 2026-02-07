@@ -28,6 +28,10 @@
 - Add/remove operations are idempotent and return structured holdings.
 - Portfolio metrics are aggregated in SQL for totals and energy-type breakdown.
 
+## Contract Comparison
+- `/contracts/compare` accepts 2-3 contract ids and returns per-contract data plus comparison metrics.
+- Response includes duration in days plus min/max/spread ranges for price, quantity, and duration.
+
 ## Infrastructure and Middleware
 - CORS is enabled for the frontend origin.
 - Lifespan startup ensures tables are present before serving requests.
@@ -40,3 +44,4 @@
 - Portfolio metrics (totals, capacity, cost, weighted avg, breakdown) are calculated in `get_portfolio_metrics`.
 - Pydantic validation is enforced across inputs, including range and date checks.
 - CORS middleware is configured in `app/main.py` for frontend access.
+- Contract comparison response shapes live in `app/schemas.py`.
