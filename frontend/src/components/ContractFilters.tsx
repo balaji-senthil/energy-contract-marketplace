@@ -18,6 +18,7 @@ interface ContractFiltersProps {
   hasActiveSort: boolean;
   activeFilterCount: number;
   isFiltering: boolean;
+  isSorting: boolean;
   matchingCount: number | null;
   onFiltersChange: (next: ContractFilterState) => void;
   onSortChange: (next: ContractSortState) => void;
@@ -43,6 +44,7 @@ const ContractFilters = ({
   hasActiveSort,
   activeFilterCount,
   isFiltering,
+  isSorting,
   matchingCount,
   onFiltersChange,
   onSortChange,
@@ -146,10 +148,11 @@ const ContractFilters = ({
   const noFiltersApplied: boolean = activeFilterCount === 0;
   const noFiltersAndNoSort: boolean = noFiltersApplied && !hasActiveSort;
   const hasActiveFilters: boolean = !noFiltersApplied;
+  const isWorking = isFiltering || isSorting;
   const shouldShowStatusIcons: boolean =
-    !isFiltering && (hasActiveFilters || hasActiveSort) && !noFiltersAndNoSort;
+    !isWorking && (hasActiveFilters || hasActiveSort) && !noFiltersAndNoSort;
   const matchingLabel: string | null =
-    noFiltersApplied || isFiltering
+    noFiltersApplied || isWorking
       ? null
       : matchingCount === null
         ? null
@@ -165,20 +168,26 @@ const ContractFilters = ({
           <p className="filtersSubtitle">Refine by energy, price, delivery, and location.</p>
         </div>
         <div className="filtersActions">
-          <div className={`filterStatus ${isFiltering ? "filterStatusActive" : ""}`}>
+          <div className={`filterStatus ${isWorking ? "filterStatusActive" : ""}`}>
             <p className="filtersMeta">
               {shouldShowStatusIcons && (
                 <span className="filterStatusIcons" aria-hidden="true">
-                  {hasActiveFilters && <FilterIcon className="filterStatusIcon" />}
-                  {hasActiveSort && <SortIcon className="filterStatusIcon" />}
+                  {(!isFiltering && hasActiveFilters) && <FilterIcon className="filterStatusIcon" />}
+                  {(!isSorting && hasActiveSort) && <SortIcon className="filterStatusIcon" />}
                 </span>
               )}
-              {isFiltering && "Applying filters..."}
+              {isWorking && (
+                <span
+                  className="filterStatusSpinner"
+                  role="status"
+                  aria-label="Updating results"
+                />
+              )}
             </p>
-            {matchingLabel && <p className="filtersMeta">{matchingLabel}</p>}
+            {(!isWorking && !noFiltersAndNoSort && matchingLabel )&& <p className="filtersMeta">{matchingLabel}</p>}
           </div>
           <button
-            disabled={noFiltersAndNoSort || isFiltering }
+            disabled={noFiltersAndNoSort || isWorking}
             title={noFiltersAndNoSort ? "No filters/sort applied" : "Clear all filters/sort"}
             className="secondaryButton"
             type="button"

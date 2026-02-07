@@ -36,6 +36,7 @@ const App = () => {
   const [filterErrorMessage, setFilterErrorMessage] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [isSorting, setIsSorting] = useState(false);
   const [portfolioStatus, setPortfolioStatus] = useState<LoadState>("idle");
   const [portfolioErrorMessage, setPortfolioErrorMessage] = useState<string | null>(null);
   const [portfolioHoldings, setPortfolioHoldings] = useState<PortfolioHolding[]>([]);
@@ -58,6 +59,8 @@ const App = () => {
     sortBy: "None",
     sortDirection: "asc",
   });
+  const previousFiltersRef = useRef<ContractFilterState | null>(null);
+  const previousSortRef = useRef<ContractSortState | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
   const isFirstLoadRef = useRef(true);
@@ -73,9 +76,11 @@ const App = () => {
     async ({
       filters: apiFilters,
       isFilterRequest = false,
+      isSortRequest = false,
     }: {
       filters?: ContractApiFilters;
       isFilterRequest?: boolean;
+      isSortRequest?: boolean;
     } = {}) => {
       const requestId = requestIdRef.current + 1;
       requestIdRef.current = requestId;
@@ -88,7 +93,11 @@ const App = () => {
     try {
       if (isFilterRequest) {
         setIsFiltering(true);
-      } else {
+      }
+      if (isSortRequest) {
+        setIsSorting(true);
+      }
+      if (!isFilterRequest && !isSortRequest) {
         setStatus("loading");
       }
       setErrorMessage(null);
@@ -110,7 +119,7 @@ const App = () => {
         return;
       }
       const message = error instanceof Error ? error.message : "Unable to load contracts.";
-      if (isFilterRequest) {
+      if (isFilterRequest || isSortRequest) {
         setFilterErrorMessage(message);
       } else {
         setErrorMessage(message);
@@ -118,8 +127,13 @@ const App = () => {
       }
     } finally {
       // Only clear filtering state if this is still the latest request
-      if (isFilterRequest && requestIdRef.current === requestId) {
-        setIsFiltering(false);
+      if (requestIdRef.current === requestId) {
+        if (isFilterRequest) {
+          setIsFiltering(false);
+        }
+        if (isSortRequest) {
+          setIsSorting(false);
+        }
       }
     }
   }, []);
@@ -266,10 +280,40 @@ const App = () => {
   useEffect(() => {
     // adding 250ms delay to avoid rapid loading of contracts when filters are changed
     const delay = isFirstLoadRef.current ? 0 : 250;
+    // now we are having two requests, one for filters and one for sort
+    const previousFilters = previousFiltersRef.current ?? filters;
+    const previousSort = previousSortRef.current ?? sortState;
+    const isSortRequest =
+      !isFirstLoadRef.current &&
+      (previousSort.sortBy !== sortState.sortBy ||
+        previousSort.sortDirection !== sortState.sortDirection);
+    const isFilterRequest =
+      !isFirstLoadRef.current &&
+      (previousFilters.status !== filters.status ||
+        previousFilters.priceMin !== filters.priceMin ||
+        previousFilters.priceMax !== filters.priceMax ||
+        previousFilters.quantityMin !== filters.quantityMin ||
+        previousFilters.quantityMax !== filters.quantityMax ||
+        previousFilters.location !== filters.location ||
+        previousFilters.deliveryStartFrom !== filters.deliveryStartFrom ||
+        previousFilters.deliveryEndTo !== filters.deliveryEndTo ||
+        previousFilters.energyTypes.length !== filters.energyTypes.length ||
+        previousFilters.energyTypes.some(
+          (energyType, index) => energyType !== filters.energyTypes[index],
+        ));
+    previousFiltersRef.current = filters;
+    previousSortRef.current = sortState;
+    if (isFilterRequest) {
+      setIsFiltering(true);
+    }
+    if (isSortRequest) {
+      setIsSorting(true);
+    }
     const handler = window.setTimeout(() => {
       void loadContracts({
         filters: appliedFilters,
-        isFilterRequest: !isFirstLoadRef.current,
+        isFilterRequest,
+        isSortRequest,
       });
       if (isFirstLoadRef.current) {
         isFirstLoadRef.current = false;
@@ -277,7 +321,7 @@ const App = () => {
     }, delay);
 
     return () => window.clearTimeout(handler);
-  }, [appliedFilters, loadContracts]);
+  }, [appliedFilters, filters, loadContracts, sortState]);
 
   useEffect(() => {
     void loadPortfolio();
@@ -477,6 +521,7 @@ const App = () => {
               hasActiveSort={hasActiveSort}
               activeFilterCount={activeFilterCount}
               isFiltering={isFiltering}
+              isSorting={isSorting}
               matchingCount={matchingCount}
               onFiltersChange={setFilters}
               onSortChange={handleSortChange}
