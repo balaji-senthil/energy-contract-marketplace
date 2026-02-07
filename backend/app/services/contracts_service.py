@@ -52,6 +52,16 @@ async def list_contracts(
     return result.scalars().all()
 
 
+async def list_contracts_by_ids(
+    *, session: AsyncSession, contract_ids: Sequence[int]
+) -> Sequence[Contract]:
+    if not contract_ids:
+        return []
+    statement = select(Contract).where(Contract.id.in_(contract_ids))
+    result = await session.execute(statement)
+    return result.scalars().all()
+
+
 async def get_contract_by_id(*, session: AsyncSession, contract_id: int) -> Optional[Contract]:
     statement = select(Contract).where(Contract.id == contract_id)
     result = await session.execute(statement)

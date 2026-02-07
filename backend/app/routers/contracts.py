@@ -1,11 +1,18 @@
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import conint
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.schemas import (
+    ComparisonRangeDecimal,
+    ComparisonRangeInt,
     ContractCreate,
+    ContractComparisonItem,
+    ContractComparisonMetrics,
+    ContractComparisonResponse,
     ContractFilters,
     ContractRead,
     ContractStatus,
@@ -16,6 +23,7 @@ from app.services.contracts_service import (
     create_contract,
     delete_contract,
     get_contract_by_id,
+    list_contracts_by_ids,
     list_contracts,
     update_contract,
 )
@@ -47,6 +55,66 @@ def get_contract_filters(
         status=status,
         search=search,
     )
+
+
+def build_decimal_range(values: list[Decimal]) -> ComparisonRangeDecimal:
+    min_value = min(values)
+    max_value = max(values)
+    return ComparisonRangeDecimal(min=min_value, max=max_value, spread=max_value - min_value)
+
+
+def build_int_range(values: list[int]) -> ComparisonRangeInt:
+    min_value = min(values)
+    max_value = max(values)
+    return ComparisonRangeInt(min=min_value, max=max_value, spread=max_value - min_value)
+
+
+def calculate_duration_days(delivery_start: date, delivery_end: date) -> int:
+    return (delivery_end - delivery_start).days + 1
+
+
+@router.get("/compare", response_model=ContractComparisonResponse)
+async def compare_contracts(
+    ids: list[conint(ge=1)] = Query(..., min_length=2, max_length=3),
+    session: AsyncSession = Depends(get_session),
+) -> ContractComparisonResponse:
+    if len(set(ids)) != len(ids):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contract ids must be unique")
+
+    contracts = await list_contracts_by_ids(session=session, contract_ids=ids)
+    contract_by_id = {contract.id: contract for contract in contracts}
+    missing_ids = [contract_id for contract_id in ids if contract_id not in contract_by_id]
+    if missing_ids:
+        missing_str = ", ".join(str(contract_id) for contract_id in missing_ids)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Contracts not found: {missing_str}",
+        )
+
+    comparison_items: list[ContractComparisonItem] = []
+    for contract_id in ids:
+        contract = contract_by_id[contract_id]
+        contract_read = ContractRead.model_validate(contract)
+        comparison_items.append(
+            ContractComparisonItem(
+                **contract_read.model_dump(),
+                duration_days=calculate_duration_days(
+                    delivery_start=contract.delivery_start,
+                    delivery_end=contract.delivery_end,
+                ),
+            )
+        )
+
+    price_values = [contract.price_per_mwh for contract in comparison_items]
+    quantity_values = [contract.quantity_mwh for contract in comparison_items]
+    duration_values = [contract.duration_days for contract in comparison_items]
+
+    metrics = ContractComparisonMetrics(
+        price_per_mwh=build_decimal_range(price_values),
+        quantity_mwh=build_decimal_range(quantity_values),
+        duration_days=build_int_range(duration_values),
+    )
+    return ContractComparisonResponse(contracts=comparison_items, metrics=metrics)
 
 
 @router.get("", response_model=list[ContractRead])
