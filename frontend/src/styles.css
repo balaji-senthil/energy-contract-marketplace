@@ -648,6 +648,12 @@ p {
   background: #ffffff;
 }
 
+.portfolioHoldingsCards {
+  display: none;
+  gap: 16px;
+  margin-top: 12px;
+}
+
 .metricsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -752,6 +758,10 @@ p {
     display: grid;
     gap: 16px;
     margin-top: 12px;
+  }
+
+  .portfolioHoldingsCards {
+    display: grid;
   }
 
   .statusMessage {

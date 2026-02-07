@@ -50,6 +50,12 @@ export const fetchContracts = async ({
   if (filters?.delivery_end_to) {
     params.set("delivery_end_to", filters.delivery_end_to);
   }
+  if (filters?.sort_by) {
+    params.set("sort_by", filters.sort_by);
+  }
+  if (filters?.sort_direction) {
+    params.set("sort_direction", filters.sort_direction);
+  }
 
   const response = await fetch(`${getApiBaseUrl()}/contracts?${params.toString()}`, {
     headers: {

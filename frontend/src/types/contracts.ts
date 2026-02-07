@@ -8,6 +8,10 @@ export type EnergyType =
 
 export type ContractStatus = "Available" | "Reserved" | "Sold";
 
+export type ContractSortBy = "price_per_mwh" | "quantity_mwh" | "delivery_start";
+
+export type ContractSortDirection = "asc" | "desc";
+
 export interface Contract {
   id: number;
   energy_type: EnergyType;
@@ -56,6 +60,8 @@ export interface ContractApiFilters {
   location?: string;
   delivery_start_from?: string;
   delivery_end_to?: string;
+  sort_by?: ContractSortBy;
+  sort_direction?: ContractSortDirection;
 }
 
 export interface ContractFilterState {
@@ -68,6 +74,11 @@ export interface ContractFilterState {
   location: string;
   deliveryStartFrom: string;
   deliveryEndTo: string;
+}
+
+export interface ContractSortState {
+  sortBy: ContractSortBy | "None";
+  sortDirection: ContractSortDirection;
 }
 
 export type NumericValue = number | string;

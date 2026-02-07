@@ -17,6 +17,7 @@ import type {
   ContractApiFilters,
   ContractFilterState,
   ContractComparisonResponse,
+  ContractSortState,
   PortfolioHolding,
   PortfolioMetrics,
 } from "./types/contracts";
@@ -50,6 +51,10 @@ const App = () => {
     location: "",
     deliveryStartFrom: "",
     deliveryEndTo: "",
+  });
+  const [sortState, setSortState] = useState<ContractSortState>({
+    sortBy: "None",
+    sortDirection: "asc",
   });
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
@@ -179,6 +184,7 @@ const App = () => {
     if (filters.location.trim().length >= 2) count += 1;
     return count;
   }, [filters]);
+  const hasActiveSort = sortState.sortBy !== "None";
 
   const appliedFilters = useMemo<ContractApiFilters>(() => {
     const nextFilters: ContractApiFilters = {};
@@ -214,8 +220,12 @@ const App = () => {
     if (filters.deliveryEndTo) {
       nextFilters.delivery_end_to = filters.deliveryEndTo;
     }
+    if (sortState.sortBy !== "None") {
+      nextFilters.sort_by = sortState.sortBy;
+      nextFilters.sort_direction = sortState.sortDirection;
+    }
     return nextFilters;
-  }, [filters]);
+  }, [filters, sortState]);
 
   const portfolioContractIds = useMemo(() => {
     return new Set(portfolioHoldings.map((holding) => holding.contract.id));
@@ -334,6 +344,14 @@ const App = () => {
       deliveryStartFrom: "",
       deliveryEndTo: "",
     });
+    setSortState({
+      sortBy: "None",
+      sortDirection: "asc",
+    });
+  }, []);
+
+  const handleSortChange = useCallback((nextSort: ContractSortState) => {
+    setSortState(nextSort);
   }, []);
 
   const handleToggleCompare = useCallback((contractId: number) => {
@@ -391,10 +409,13 @@ const App = () => {
 
         <ContractFilters
           filters={filters}
+          sortState={sortState}
+          hasActiveSort={hasActiveSort}
           activeFilterCount={activeFilterCount}
           isFiltering={isFiltering}
           matchingCount={matchingCount}
           onFiltersChange={setFilters}
+          onSortChange={handleSortChange}
           onReset={handleResetFilters}
         />
 

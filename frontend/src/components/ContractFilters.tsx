@@ -1,26 +1,49 @@
 import type { ChangeEvent } from "react";
-import type { ContractFilterState, ContractStatus, EnergyType } from "../types/contracts";
+import type {
+  ContractFilterState,
+  ContractSortState,
+  ContractSortBy,
+  ContractSortDirection,
+  ContractStatus,
+  EnergyType,
+} from "../types/contracts";
 import { PRICE_RANGE, QUANTITY_RANGE } from "../constants/filters";
 import { formatCurrency, formatNumber } from "../utils/format";
 
 interface ContractFiltersProps {
   filters: ContractFilterState;
+  sortState: ContractSortState;
+  hasActiveSort: boolean;
   activeFilterCount: number;
   isFiltering: boolean;
   matchingCount: number | null;
   onFiltersChange: (next: ContractFilterState) => void;
+  onSortChange: (next: ContractSortState) => void;
   onReset: () => void;
 }
 
 const energyTypes: EnergyType[] = ["Solar", "Wind", "Natural Gas", "Nuclear", "Coal", "Hydro"];
 const statusOptions: Array<ContractStatus | "Any"> = ["Any", "Available", "Reserved", "Sold"];
+const sortOptions: Array<{ value: ContractSortBy | "None"; label: string }> = [
+  { value: "None", label: "None" },
+  { value: "price_per_mwh", label: "Price per MWh" },
+  { value: "quantity_mwh", label: "Quantity (MWh)" },
+  { value: "delivery_start", label: "Delivery start date" },
+];
+const sortDirectionOptions: Array<{ value: ContractSortDirection; label: string }> = [
+  { value: "asc", label: "Ascending" },
+  { value: "desc", label: "Descending" },
+];
 
 const ContractFilters = ({
   filters,
+  sortState,
+  hasActiveSort,
   activeFilterCount,
   isFiltering,
   matchingCount,
   onFiltersChange,
+  onSortChange,
   onReset,
 }: ContractFiltersProps) => {
   const getTodayDateString = () => {
@@ -119,7 +142,8 @@ const ContractFilters = ({
   };
 
   const noFiltersApplied: boolean = activeFilterCount === 0;
-  const matchingLabel =
+  const noFiltersAndNoSort: boolean = noFiltersApplied && !hasActiveSort;
+  const matchingLabel: string | null =
     noFiltersApplied || isFiltering
       ? null
       : matchingCount === null
@@ -132,7 +156,7 @@ const ContractFilters = ({
     <div className="filtersCard">
       <div className="filtersHeader">
         <div>
-          <p className="filtersEyebrow">Filters</p>
+          <p className="filtersEyebrow">Filter and Sort</p>
           <p className="filtersSubtitle">Refine by energy, price, delivery, and location.</p>
         </div>
         <div className="filtersActions">
@@ -140,15 +164,15 @@ const ContractFilters = ({
             <p className="filtersMeta">
               {isFiltering
                 ? "Applying filters..."
-                : noFiltersApplied
-                  ? "No active filters"
-                  : "Filters applied"}
+                : noFiltersAndNoSort
+                  ? "No active filters/sort"
+                  : "Filters/sort applied"}
             </p>
             {matchingLabel && <p className="filtersMeta">{matchingLabel}</p>}
           </div>
           <button
-            disabled={noFiltersApplied || isFiltering}
-            title={noFiltersApplied ? "No filters applied" : "Clear all filters"}
+            disabled={noFiltersAndNoSort || isFiltering }
+            title={noFiltersAndNoSort ? "No filters/sort applied" : "Clear all filters/sort"}
             className="secondaryButton"
             type="button"
             onClick={onReset}
@@ -195,6 +219,47 @@ const ContractFilters = ({
             {statusOptions.map((status) => (
               <option key={status} value={status}>
                 {status}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filterGroup">
+          <p className="filterLabel">Sort by</p>
+          <select
+            className="filterSelect"
+            value={sortState.sortBy}
+            onChange={(event) =>
+              onSortChange({
+                ...sortState,
+                sortBy: event.target.value as ContractSortBy | "None",
+              })
+            }
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filterGroup">
+          <p className="filterLabel">Sort direction</p>
+          <select
+            className="filterSelect"
+            value={sortState.sortDirection}
+            onChange={(event) =>
+              onSortChange({
+                ...sortState,
+                sortDirection: event.target.value as ContractSortDirection,
+              })
+            }
+            disabled={sortState.sortBy === "None"}
+          >
+            {sortDirectionOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
