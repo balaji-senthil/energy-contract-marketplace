@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +10,11 @@ from app.models import Base
 from app.routers.contracts import router as contracts_router
 from app.routers.portfolios import router as portfolios_router
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper()
+)
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -15,7 +22,9 @@ async def lifespan(_: FastAPI):
     # create_all is synchronous DDL, so we run it via the async connection with run_sync.
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
+    logger.info("Startup: DB connection established")
     yield
+    logger.info("Shutdown: DB connection closed")
 
 
 app = FastAPI(title="Energy Contract Marketplace", lifespan=lifespan)

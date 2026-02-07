@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+import logging
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -7,6 +8,8 @@ from sqlalchemy.orm import selectinload
 
 from app.models import Contract, Portfolio, PortfolioHolding, User
 
+logger = logging.getLogger(__name__)
+
 
 async def ensure_user_portfolio(*, session: AsyncSession, user_id: int) -> Portfolio:
     user = await session.get(User, user_id)
@@ -14,6 +17,7 @@ async def ensure_user_portfolio(*, session: AsyncSession, user_id: int) -> Portf
         user = User(id=user_id)
         session.add(user)
         await session.flush()
+        logger.info(f"User portfolio created: {user_id = }")
 
     statement = select(Portfolio).where(Portfolio.user_id == user_id)
     result = await session.execute(statement)
@@ -23,8 +27,14 @@ async def ensure_user_portfolio(*, session: AsyncSession, user_id: int) -> Portf
 
     portfolio = Portfolio(user_id=user_id)
     session.add(portfolio)
-    await session.commit()
-    await session.refresh(portfolio)
+    try:
+        await session.commit()
+        await session.refresh(portfolio)
+    except Exception:
+        await session.rollback()
+        logger.exception(f"Create portfolio failed: {user_id = }")
+        raise
+    logger.info(f"Portfolio created: {user_id = }, {portfolio.id = }")
     return portfolio
 
 
@@ -54,8 +64,14 @@ async def add_contract_to_portfolio(
 
     holding = PortfolioHolding(portfolio_id=portfolio.id, contract_id=contract_id)
     session.add(holding)
-    await session.commit()
-    await session.refresh(holding)
+    try:
+        await session.commit()
+        await session.refresh(holding)
+    except Exception:
+        await session.rollback()
+        logger.exception(f"Add contract to portfolio failed: {user_id = }, {contract_id = }")
+        raise
+    logger.info(f"Contract added to portfolio: {user_id = }, {contract_id = }, {holding.id = }")
     return holding
 
 
@@ -76,7 +92,13 @@ async def remove_contract_from_portfolio(
         return False
 
     await session.delete(holding)
-    await session.commit()
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        logger.exception(f"Remove contract from portfolio failed: {user_id = }, {contract_id = }")
+        raise
+    logger.info(f"Contract removed from portfolio: {user_id = }, {contract_id = }")
     return True
 
 

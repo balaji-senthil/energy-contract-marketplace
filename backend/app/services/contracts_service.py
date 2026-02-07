@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+import logging
 from typing import Optional
 
 from sqlalchemy import asc, desc, or_, select
@@ -6,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Contract
 from app.schemas import ContractCreate, ContractFilters, ContractSortBy, ContractSortDirection, ContractUpdate
+
+logger = logging.getLogger(__name__)
 
 
 async def list_contracts(
@@ -82,8 +85,14 @@ async def get_contract_by_id(*, session: AsyncSession, contract_id: int) -> Opti
 async def create_contract(*, session: AsyncSession, payload: ContractCreate) -> Contract:
     contract = Contract(**payload.model_dump())
     session.add(contract)
-    await session.commit()
-    await session.refresh(contract)
+    try:
+        await session.commit()
+        await session.refresh(contract)
+    except Exception:
+        await session.rollback()
+        logger.exception("Create contract failed", extra={"payload": payload})
+        raise
+    logger.info(f"Contract created: {contract.id = }")
     return contract
 
 
@@ -93,11 +102,23 @@ async def update_contract(
     update_data = payload.model_dump(exclude_unset=True)
     for field_name, field_value in update_data.items():
         setattr(contract, field_name, field_value)
-    await session.commit()
-    await session.refresh(contract)
+    try:
+        await session.commit()
+        await session.refresh(contract)
+    except Exception:
+        await session.rollback()
+        logger.exception("Update contract failed", extra={"contract_id": contract.id})
+        raise
+    logger.info(f"Contract updated: {contract.id = }")
     return contract
 
 
 async def delete_contract(*, session: AsyncSession, contract: Contract) -> None:
     await session.delete(contract)
-    await session.commit()
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        logger.exception("Delete contract failed", extra={"contract_id": contract.id})
+        raise
+    logger.info(f"Contract deleted: {contract.id = }")
