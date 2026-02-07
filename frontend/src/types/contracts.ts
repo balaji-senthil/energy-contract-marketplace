@@ -19,6 +19,33 @@ export interface Contract {
   status: ContractStatus;
 }
 
+export interface ContractComparisonItem extends Contract {
+  duration_days: number;
+}
+
+export interface ComparisonRangeDecimal {
+  min: number;
+  max: number;
+  spread: number;
+}
+
+export interface ComparisonRangeInt {
+  min: number;
+  max: number;
+  spread: number;
+}
+
+export interface ContractComparisonMetrics {
+  price_per_mwh: ComparisonRangeDecimal;
+  quantity_mwh: ComparisonRangeDecimal;
+  duration_days: ComparisonRangeInt;
+}
+
+export interface ContractComparisonResponse {
+  contracts: ContractComparisonItem[];
+  metrics: ContractComparisonMetrics;
+}
+
 export interface ContractApiFilters {
   energy_types?: EnergyType[];
   status?: ContractStatus;
