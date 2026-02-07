@@ -222,10 +222,6 @@ p {
   transition: all 0.2s ease;
 }
 
-.tabButton:hover {
-  color: #1d4ed8;
-}
-
 .tabButtonActive {
   background: #2563eb;
   color: #ffffff;
