@@ -79,8 +79,8 @@ const ContractTable = ({
                     checked={isSelected}
                     onChange={() => onToggleCompare(contract.id)}
                     disabled={isCompareDisabled}
+                    title={isCompareDisabled ? "Maximum of 3 contracts can be selected" : "Compare"}
                   />
-                  <span>{isSelected ? "Selected" : "Compare"}</span>
                 </label>
               </td>
             </tr>
