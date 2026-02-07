@@ -1,6 +1,6 @@
 import type { Contract } from "../types/contracts";
 import { formatCurrency, formatDateRange, formatNumber } from "../utils/format";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../ui/StatusBadge";
 
 interface ContractTableProps {
   contracts: Contract[];

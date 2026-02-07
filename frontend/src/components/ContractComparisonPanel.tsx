@@ -1,6 +1,6 @@
 import type { ContractComparisonResponse } from "../types/contracts";
 import { formatCurrency, formatDateRange, formatNumber } from "../utils/format";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../ui/StatusBadge";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 

@@ -1,7 +1,7 @@
 import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
 import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
 import RefreshIcon from "../ui/RefreshIcon";
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "../ui/StatusBadge";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
