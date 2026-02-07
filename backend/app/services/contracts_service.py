@@ -1,11 +1,11 @@
 from collections.abc import Sequence
 from typing import Optional
 
-from sqlalchemy import or_, select
+from sqlalchemy import asc, desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Contract
-from app.schemas import ContractCreate, ContractFilters, ContractUpdate
+from app.schemas import ContractCreate, ContractFilters, ContractSortBy, ContractSortDirection, ContractUpdate
 
 
 async def list_contracts(
@@ -47,7 +47,18 @@ async def list_contracts(
     if filter_conditions:
         statement = statement.where(*filter_conditions)
 
-    statement = statement.order_by(Contract.id).offset(offset).limit(limit)
+    sort_column = Contract.id
+    if filters.sort_by == ContractSortBy.price_per_mwh:
+        sort_column = Contract.price_per_mwh
+    elif filters.sort_by == ContractSortBy.quantity_mwh:
+        sort_column = Contract.quantity_mwh
+    elif filters.sort_by == ContractSortBy.delivery_start:
+        sort_column = Contract.delivery_start
+
+    sort_direction = filters.sort_direction or ContractSortDirection.asc
+    order_clause = asc(sort_column) if sort_direction == ContractSortDirection.asc else desc(sort_column)
+
+    statement = statement.order_by(order_clause, Contract.id).offset(offset).limit(limit)
     result = await session.execute(statement)
     return result.scalars().all()
 

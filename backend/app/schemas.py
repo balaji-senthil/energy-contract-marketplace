@@ -68,6 +68,17 @@ class ContractUpdate(BaseModel):
         return self
 
 
+class ContractSortBy(str, Enum):
+    price_per_mwh = "price_per_mwh"
+    quantity_mwh = "quantity_mwh"
+    delivery_start = "delivery_start"
+
+
+class ContractSortDirection(str, Enum):
+    asc = "asc"
+    desc = "desc"
+
+
 class ContractFilters(BaseModel):
     energy_types: list[EnergyType] | None = None
     price_min: Decimal | None = Field(default=None, ge=0, max_digits=18, decimal_places=6)
@@ -80,6 +91,8 @@ class ContractFilters(BaseModel):
     # Optional status filter for list/search queries
     status: ContractStatus | None = None
     search: str | None = Field(default=None, min_length=2, max_length=120)
+    sort_by: ContractSortBy | None = None
+    sort_direction: ContractSortDirection | None = None
 
     @model_validator(mode="after")
     def validate_ranges(self) -> "ContractFilters":

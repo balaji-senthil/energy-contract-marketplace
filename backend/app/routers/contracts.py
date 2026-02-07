@@ -15,6 +15,8 @@ from app.schemas import (
     ContractComparisonResponse,
     ContractFilters,
     ContractRead,
+    ContractSortBy,
+    ContractSortDirection,
     ContractStatus,
     ContractUpdate,
     EnergyType,
@@ -42,6 +44,8 @@ def get_contract_filters(
     delivery_end_to: date | None = Query(default=None),
     status: ContractStatus | None = Query(default=None),
     search: str | None = Query(default=None, min_length=2, max_length=120),
+    sort_by: ContractSortBy | None = Query(default=None),
+    sort_direction: ContractSortDirection | None = Query(default=None),
 ) -> ContractFilters:
     return ContractFilters(
         energy_types=energy_types,
@@ -54,6 +58,8 @@ def get_contract_filters(
         delivery_end_to=delivery_end_to,
         status=status,
         search=search,
+        sort_by=sort_by,
+        sort_direction=sort_direction,
     )
 
 
