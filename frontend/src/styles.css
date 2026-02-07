@@ -464,6 +464,76 @@ p {
   color: #b42318;
 }
 
+.contractsSkeleton {
+  margin-top: 16px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.skeletonLine,
+.skeletonPill,
+.skeletonButton {
+  display: inline-block;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 45%, #e2e8f0 65%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.skeletonLineXs {
+  width: 60px;
+}
+
+.skeletonLineSm {
+  width: 80px;
+}
+
+.skeletonLineMd {
+  width: 120px;
+}
+
+.skeletonLineLg {
+  width: 180px;
+}
+
+.skeletonPill {
+  height: 20px;
+  width: 90px;
+}
+
+.skeletonButton {
+  height: 32px;
+  width: 90px;
+}
+
+.skeletonButtonWide {
+  width: 130px;
+}
+
+.skeletonRow td {
+  vertical-align: middle;
+}
+
+.skeletonCard {
+  pointer-events: none;
+}
+
+.skeletonCard .skeletonLine + .skeletonLine {
+  margin-top: 6px;
+}
+
+.skeletonCardsGrid .cardBody {
+  gap: 16px;
+}
+
 .tableWrapper {
   overflow-x: auto;
 }

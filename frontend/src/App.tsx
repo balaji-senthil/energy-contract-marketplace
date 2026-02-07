@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ContractCards from "./components/ContractCards";
 import ContractComparisonPanel from "./components/ContractComparisonPanel";
 import ContractFilters from "./components/ContractFilters";
+import ContractLoadingSkeleton from "./components/ContractLoadingSkeleton";
 import ContractTable from "./components/ContractTable";
 import PortfolioBuilder from "./components/PortfolioBuilder";
 import { fetchContractComparison, fetchContracts } from "./api/contractsApi";
@@ -420,7 +421,7 @@ const App = () => {
           </div>
         )}
 
-        {status === "loading" && <p className="statusMessage">Loading contracts...</p>}
+        {status === "loading" && <ContractLoadingSkeleton />}
 
         {status === "error" && (
           <div className="statusMessage statusError">
