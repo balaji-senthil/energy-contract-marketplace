@@ -105,6 +105,33 @@ class ContractRead(ContractBase):
     model_config = {"from_attributes": True}
 
 
+class ComparisonRangeDecimal(BaseModel):
+    min: Decimal
+    max: Decimal
+    spread: Decimal
+
+
+class ComparisonRangeInt(BaseModel):
+    min: int
+    max: int
+    spread: int
+
+
+class ContractComparisonItem(ContractRead):
+    duration_days: int
+
+
+class ContractComparisonMetrics(BaseModel):
+    price_per_mwh: ComparisonRangeDecimal
+    quantity_mwh: ComparisonRangeDecimal
+    duration_days: ComparisonRangeInt
+
+
+class ContractComparisonResponse(BaseModel):
+    contracts: list[ContractComparisonItem]
+    metrics: ContractComparisonMetrics
+
+
 class PortfolioHoldingRead(BaseModel):
     id: int
     added_at: datetime
