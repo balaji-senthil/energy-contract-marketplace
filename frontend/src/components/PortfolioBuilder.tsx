@@ -1,3 +1,4 @@
+import { BarChart, PieChart } from "@mui/x-charts";
 import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
 import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
 import RefreshIcon from "../ui/RefreshIcon";
@@ -28,9 +29,28 @@ const PortfolioBuilder = ({
 }: PortfolioBuilderProps) => {
   const hasHoldings = holdings.length > 0;
   const hasMetrics = metrics !== null;
+  const breakdown = metrics?.breakdown_by_energy_type ?? [];
+  const hasBreakdown = breakdown.length > 0;
   const wrapperClassName =
     variant === "tab" ? "portfolioPanel" : "contentCard portfolioCard";
   const Wrapper = variant === "tab" ? "div" : "section";
+
+  const toChartValue = (value: number | string): number => {
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : 0;
+    }
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const energyPieData = breakdown.map((item, index) => ({
+    id: index,
+    value: toChartValue(item.total_capacity_mwh),
+    label: item.energy_type,
+  }));
+
+  const energyLabels = breakdown.map((item) => item.energy_type);
+  const energyCosts = breakdown.map((item) => toChartValue(item.total_cost));
 
   return (
     <Wrapper className={wrapperClassName}>
@@ -106,6 +126,47 @@ const PortfolioBuilder = ({
                 </div>
                 <div className="breakdownCard">
                   <p className="metricLabel">Breakdown by energy type</p>
+                  {hasBreakdown ? (
+                    <div className="portfolioCharts">
+                      <div className="portfolioChartCard">
+                        <p className="chartTitle">Capacity split</p>
+                        <PieChart
+                          series={[
+                            {
+                              data: energyPieData,
+                              valueFormatter: (item) =>
+                                `${formatNumber(item.value ?? 0)} MWh`,
+                            },
+                          ]}
+                          height={220}
+                          margin={{ left: 12, right: 12, top: 12, bottom: 12 }}
+                        />
+                      </div>
+                      <div className="portfolioChartCard">
+                        <p className="chartTitle">Cost by energy type</p>
+                        <BarChart
+                          xAxis={[
+                            {
+                              data: energyLabels,
+                              scaleType: "band",
+                              label: "Energy Type",
+                            },
+                          ]}
+                          yAxis={[{ label: "Total Cost (USD)" }]}
+                          series={[
+                            {
+                              data: energyCosts,
+                              valueFormatter: (value) => formatCurrency(value ?? 0),
+                            },
+                          ]}
+                          height={220}
+                          margin={{ left: 24, right: 12, top: 16, bottom: 32 }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="chartEmptyState">No energy breakdown available yet.</p>
+                  )}
                   <div className="breakdownList">
                     {metrics.breakdown_by_energy_type.map((item) => (
                       <div className="breakdownRow" key={item.energy_type}>

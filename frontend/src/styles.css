@@ -776,6 +776,35 @@ p {
   border: 1px solid #e2e8f0;
 }
 
+.portfolioCharts {
+  display: grid;
+  gap: 16px;
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+.portfolioChartCard {
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.chartTitle {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.chartEmptyState {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
 .breakdownList {
   display: grid;
   gap: 12px;
@@ -822,6 +851,10 @@ p {
 @media (min-width: 960px) {
   .portfolioGrid {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+
+  .portfolioCharts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
