@@ -5,6 +5,7 @@ import ContractFilters from "./components/ContractFilters";
 import ContractLoadingSkeleton from "./components/ContractLoadingSkeleton";
 import ContractTable from "./components/ContractTable";
 import PortfolioBuilder from "./components/PortfolioBuilder";
+import RefreshIcon from "./components/RefreshIcon";
 import { fetchContractComparison, fetchContracts } from "./api/contractsApi";
 import {
   addContractToPortfolio,
@@ -384,6 +385,11 @@ const App = () => {
     void loadComparison(compareIds);
   }, [compareIds, loadComparison]);
 
+  const handleRefreshAll = useCallback(() => {
+    void loadContracts({ filters: appliedFilters });
+    void loadPortfolio();
+  }, [appliedFilters, loadContracts, loadPortfolio]);
+
   return (
     <div className="appShell">
       <header className="hero">
@@ -397,11 +403,13 @@ const App = () => {
         </div>
         <div className="heroActions">
           <button
-            className="secondaryButton"
-            onClick={() => loadContracts({ filters: appliedFilters })}
+            className="secondaryButton iconButton"
+            onClick={handleRefreshAll}
             type="button"
+            title="Refresh All"
+            aria-label="Refresh All"
           >
-            Refresh
+            <RefreshIcon className="refreshIcon" />
           </button>
           {lastUpdated && (
             <p className="lastUpdated">
@@ -452,6 +460,15 @@ const App = () => {
                 <h3>{resultCountLabel}</h3>
                 <p className="sectionMeta">View full contract details at a glance.</p>
               </div>
+              <button
+                className="secondaryButton iconButton"
+                onClick={() => loadContracts({ filters: appliedFilters })}
+                type="button"
+                title="Refresh Contracts"
+                aria-label="Refresh Contracts"
+              >
+                <RefreshIcon className="refreshIcon" />
+              </button>
             </div>
 
             <ContractFilters

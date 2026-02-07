@@ -1,5 +1,6 @@
 import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
 import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
+import RefreshIcon from "./RefreshIcon";
 import StatusBadge from "./StatusBadge";
 
 type LoadState = "idle" | "loading" | "success" | "error";
@@ -38,8 +39,14 @@ const PortfolioBuilder = ({
           <h2>Portfolio Builder</h2>
           <p className="sectionMeta">Track selected contracts and portfolio metrics.</p>
         </div>
-        <button className="secondaryButton" onClick={onRetry} type="button">
-          Refresh portfolio
+        <button
+          className="secondaryButton iconButton"
+          onClick={onRetry}
+          type="button"
+          title="Refresh Portfolio"
+          aria-label="Refresh Portfolio"
+        >
+          <RefreshIcon className="refreshIcon" />
         </button>
       </div>
 
