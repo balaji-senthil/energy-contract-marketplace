@@ -11,4 +11,7 @@ VALUES
   ('Natural Gas', 600.00, 50.50, '2026-04-10', '2026-09-10', 'Gulf Coast', 'Available'),
   ('Hydro', 420.00, 39.80, '2026-02-20', '2026-05-20', 'Canada East', 'Available'),
   ('Solar', 980.00, 44.20, '2026-07-01', '2026-11-30', 'Nevada', 'Sold'),
-  ('Nuclear', 1100.00, 58.75, '2026-08-01', '2027-01-31', 'Southeast', 'Available');
+  ('Nuclear', 1100.00, 58.75, '2026-08-01', '2027-01-31', 'Southeast', 'Available'),
+  ('Solar', 1200.00, 85.75, '2026-11-01', '2027-02-28', 'Southwest', 'Available'),
+  ('Wind', 1300.00, 95.75, '2026-12-01', '2027-03-28', 'Northwest', 'Available'),
+  ('Natural Gas', 1400.00, 105.75, '2027-01-01', '2027-04-28', 'Midwest', 'Available');
