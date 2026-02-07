@@ -278,6 +278,9 @@ p {
   font-size: 0.85rem;
   color: #475467;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .filtersGrid {
@@ -417,6 +420,18 @@ p {
 
 .filterStatusActive {
   color: #1d4ed8;
+}
+
+.filterStatusIcons {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filterStatusIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 @keyframes pulse {

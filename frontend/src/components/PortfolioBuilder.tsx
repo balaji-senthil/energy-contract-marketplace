@@ -1,6 +1,6 @@
 import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
 import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
-import RefreshIcon from "./RefreshIcon";
+import RefreshIcon from "../ui/RefreshIcon";
 import StatusBadge from "./StatusBadge";
 
 type LoadState = "idle" | "loading" | "success" | "error";

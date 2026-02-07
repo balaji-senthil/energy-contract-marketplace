@@ -9,6 +9,8 @@ import type {
 } from "../types/contracts";
 import { PRICE_RANGE, QUANTITY_RANGE } from "../constants/filters";
 import { formatCurrency, formatNumber } from "../utils/format";
+import FilterIcon from "../ui/FilterIcon";
+import SortIcon from "../ui/SortIcon";
 
 interface ContractFiltersProps {
   filters: ContractFilterState;
@@ -143,6 +145,9 @@ const ContractFilters = ({
 
   const noFiltersApplied: boolean = activeFilterCount === 0;
   const noFiltersAndNoSort: boolean = noFiltersApplied && !hasActiveSort;
+  const hasActiveFilters: boolean = !noFiltersApplied;
+  const shouldShowStatusIcons: boolean =
+    !isFiltering && (hasActiveFilters || hasActiveSort) && !noFiltersAndNoSort;
   const matchingLabel: string | null =
     noFiltersApplied || isFiltering
       ? null
@@ -162,11 +167,13 @@ const ContractFilters = ({
         <div className="filtersActions">
           <div className={`filterStatus ${isFiltering ? "filterStatusActive" : ""}`}>
             <p className="filtersMeta">
-              {isFiltering
-                ? "Applying filters..."
-                : noFiltersAndNoSort
-                  ? "No active filters/sort"
-                  : "Filters/sort applied"}
+              {shouldShowStatusIcons && (
+                <span className="filterStatusIcons" aria-hidden="true">
+                  {hasActiveFilters && <FilterIcon className="filterStatusIcon" />}
+                  {hasActiveSort && <SortIcon className="filterStatusIcon" />}
+                </span>
+              )}
+              {isFiltering && "Applying filters..."}
             </p>
             {matchingLabel && <p className="filtersMeta">{matchingLabel}</p>}
           </div>

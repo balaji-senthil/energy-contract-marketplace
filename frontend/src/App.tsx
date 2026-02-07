@@ -5,7 +5,7 @@ import ContractFilters from "./components/ContractFilters";
 import ContractLoadingSkeleton from "./components/ContractLoadingSkeleton";
 import ContractTable from "./components/ContractTable";
 import PortfolioBuilder from "./components/PortfolioBuilder";
-import RefreshIcon from "./components/RefreshIcon";
+import RefreshIcon from "./ui/RefreshIcon";
 import { fetchContractComparison, fetchContracts } from "./api/contractsApi";
 import {
   addContractToPortfolio,
