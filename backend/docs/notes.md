@@ -14,7 +14,7 @@
 - Portfolio holdings enforce uniqueness per portfolio/contract pair.
 - Monetary and quantity fields use precision-friendly numeric columns.
 
-## Database Diagram (Mermaid UML)
+## Database Diagram (Mermaid ERD)
 ![Database Diagram](db-diagram.png)
 
 
