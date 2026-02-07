@@ -14,6 +14,7 @@ body {
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -191,6 +192,48 @@ p {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.tabsToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #475467;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover {
+  color: #1d4ed8;
+}
+
+.tabButtonActive {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+}
+
+.tabPanel {
+  margin-top: 20px;
 }
 
 .sectionMeta {
@@ -628,6 +671,10 @@ p {
 
 .portfolioCard {
   margin-top: 32px;
+}
+
+.portfolioPanel {
+  margin-top: 8px;
 }
 
 .portfolioGrid {

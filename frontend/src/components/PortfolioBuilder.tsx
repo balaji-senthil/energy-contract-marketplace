@@ -12,6 +12,7 @@ interface PortfolioBuilderProps {
   onRetry: () => void;
   onRemove: (contractId: number) => void;
   removingIds: Set<number>;
+  variant?: "standalone" | "tab";
 }
 
 const PortfolioBuilder = ({
@@ -22,12 +23,16 @@ const PortfolioBuilder = ({
   onRetry,
   onRemove,
   removingIds,
+  variant = "standalone", // standalone can be used if we need to pop out the portfolio builder into a modal
 }: PortfolioBuilderProps) => {
   const hasHoldings = holdings.length > 0;
   const hasMetrics = metrics !== null;
+  const wrapperClassName =
+    variant === "tab" ? "portfolioPanel" : "contentCard portfolioCard";
+  const Wrapper = variant === "tab" ? "div" : "section";
 
   return (
-    <section className="contentCard portfolioCard">
+    <Wrapper className={wrapperClassName}>
       <div className="sectionHeader">
         <div>
           <h2>Portfolio Builder</h2>
@@ -224,7 +229,7 @@ const PortfolioBuilder = ({
           </div>
         </div>
       )}
-    </section>
+    </Wrapper>
   );
 };
 

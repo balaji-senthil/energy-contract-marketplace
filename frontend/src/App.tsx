@@ -24,6 +24,7 @@ import type {
 import { PRICE_RANGE, QUANTITY_RANGE } from "./constants/filters";
 
 type LoadState = "idle" | "loading" | "success" | "error";
+type ActiveTab = "contracts" | "portfolio";
 
 const PORTFOLIO_USER_ID = 1;
 
@@ -65,6 +66,7 @@ const App = () => {
   const [compareStatus, setCompareStatus] = useState<LoadState>("idle");
   const [compareErrorMessage, setCompareErrorMessage] = useState<string | null>(null);
   const [comparison, setComparison] = useState<ContractComparisonResponse | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("contracts");
 
   const loadContracts = useCallback(
     async ({
@@ -162,6 +164,14 @@ const App = () => {
     }
     return `Contracts (${contracts.length})`;
   }, [contracts.length, status]);
+  
+  const portfolioTabLabel = useMemo(() => {
+    if (portfolioStatus !== "success") {
+      return "Portfolio";
+    }
+    return `Portfolio (${portfolioHoldings.length})`;
+  }, [portfolioHoldings.length, portfolioStatus]);
+  
   const matchingCount = status === "success" ? contracts.length : null;
 
   const activeFilterCount = useMemo(() => {
@@ -402,98 +412,142 @@ const App = () => {
       </header>
 
       <section className="contentCard">
-        <div className="sectionHeader">
-          <h2>{resultCountLabel}</h2>
-          <p className="sectionMeta">View full contract details at a glance.</p>
+        <div className="tabsToolbar">
+          <div>
+            <h2>Marketplace Workspace</h2>
+            <p className="sectionMeta">
+              Switch between contracts and your portfolio without losing context.
+            </p>
+          </div>
+          <div className="tabs" role="tablist" aria-label="Marketplace views">
+            <button
+              className={`tabButton ${activeTab === "contracts" ? "tabButtonActive" : ""}`}
+              id="tab-contracts"
+              role="tab"
+              aria-selected={activeTab === "contracts"}
+              aria-controls="panel-contracts"
+              type="button"
+              onClick={() => setActiveTab("contracts")}
+            >
+              {resultCountLabel}
+            </button>
+            <button
+              className={`tabButton ${activeTab === "portfolio" ? "tabButtonActive" : ""}`}
+              id="tab-portfolio"
+              role="tab"
+              aria-selected={activeTab === "portfolio"}
+              aria-controls="panel-portfolio"
+              type="button"
+              onClick={() => setActiveTab("portfolio")}
+            >
+              {portfolioTabLabel}
+            </button>
+          </div>
         </div>
 
-        <ContractFilters
-          filters={filters}
-          sortState={sortState}
-          hasActiveSort={hasActiveSort}
-          activeFilterCount={activeFilterCount}
-          isFiltering={isFiltering}
-          matchingCount={matchingCount}
-          onFiltersChange={setFilters}
-          onSortChange={handleSortChange}
-          onReset={handleResetFilters}
-        />
+        {activeTab === "contracts" && (
+          <div className="tabPanel" role="tabpanel" id="panel-contracts" aria-labelledby="tab-contracts">
+            <div className="sectionHeader">
+              <div>
+                <h3>{resultCountLabel}</h3>
+                <p className="sectionMeta">View full contract details at a glance.</p>
+              </div>
+            </div>
 
-        <ContractComparisonPanel
-          selectedIds={compareIds}
-          comparison={comparison}
-          status={compareStatus}
-          errorMessage={compareErrorMessage}
-          onClear={handleClearComparison}
-          onRetry={handleRetryComparison}
-          onRemove={handleToggleCompare}
-        />
+            <ContractFilters
+              filters={filters}
+              sortState={sortState}
+              hasActiveSort={hasActiveSort}
+              activeFilterCount={activeFilterCount}
+              isFiltering={isFiltering}
+              matchingCount={matchingCount}
+              onFiltersChange={setFilters}
+              onSortChange={handleSortChange}
+              onReset={handleResetFilters}
+            />
 
-        {filterErrorMessage && (
-          <div className="statusMessage statusError">
-            <p>{filterErrorMessage}</p>
-            <button
-              className="primaryButton"
-              onClick={() => loadContracts({ filters: appliedFilters, isFilterRequest: true })}
-              type="button"
-            >
-              Retry filters
-            </button>
+            <ContractComparisonPanel
+              selectedIds={compareIds}
+              comparison={comparison}
+              status={compareStatus}
+              errorMessage={compareErrorMessage}
+              onClear={handleClearComparison}
+              onRetry={handleRetryComparison}
+              onRemove={handleToggleCompare}
+            />
+
+            {filterErrorMessage && (
+              <div className="statusMessage statusError">
+                <p>{filterErrorMessage}</p>
+                <button
+                  className="primaryButton"
+                  onClick={() => loadContracts({ filters: appliedFilters, isFilterRequest: true })}
+                  type="button"
+                >
+                  Retry filters
+                </button>
+              </div>
+            )}
+
+            {status === "loading" && <ContractLoadingSkeleton />}
+
+            {status === "error" && (
+              <div className="statusMessage statusError">
+                <p>{errorMessage}</p>
+                <button
+                  className="primaryButton"
+                  onClick={() => loadContracts({ filters: appliedFilters })}
+                  type="button"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {status === "success" && contracts.length === 0 && (
+              <p className="statusMessage">No contracts available yet.</p>
+            )}
+
+            {status === "success" && contracts.length > 0 && (
+              <>
+                <ContractTable
+                  contracts={contracts}
+                  portfolioContractIds={portfolioContractIds}
+                  updatingContractIds={portfolioUpdatingIds}
+                  onAddToPortfolio={handleAddToPortfolio}
+                  selectedCompareIds={selectedCompareIds}
+                  isCompareSelectionFull={isCompareSelectionFull}
+                  onToggleCompare={handleToggleCompare}
+                />
+                <ContractCards
+                  contracts={contracts}
+                  portfolioContractIds={portfolioContractIds}
+                  updatingContractIds={portfolioUpdatingIds}
+                  onAddToPortfolio={handleAddToPortfolio}
+                  selectedCompareIds={selectedCompareIds}
+                  isCompareSelectionFull={isCompareSelectionFull}
+                  onToggleCompare={handleToggleCompare}
+                />
+              </>
+            )}
           </div>
         )}
 
-        {status === "loading" && <ContractLoadingSkeleton />}
-
-        {status === "error" && (
-          <div className="statusMessage statusError">
-            <p>{errorMessage}</p>
-            <button
-              className="primaryButton"
-              onClick={() => loadContracts({ filters: appliedFilters })}
-              type="button"
-            >
-              Try again
-            </button>
+        {activeTab === "portfolio" && (
+          <div className="tabPanel" role="tabpanel" id="panel-portfolio" aria-labelledby="tab-portfolio">
+            <PortfolioBuilder
+              holdings={portfolioHoldings}
+              metrics={portfolioMetrics}
+              status={portfolioStatus}
+              errorMessage={portfolioErrorMessage}
+              onRetry={loadPortfolio}
+              onRemove={handleRemoveFromPortfolio}
+              removingIds={portfolioUpdatingIds}
+              variant="tab"
+            />
           </div>
-        )}
-
-        {status === "success" && contracts.length === 0 && (
-          <p className="statusMessage">No contracts available yet.</p>
-        )}
-
-        {status === "success" && contracts.length > 0 && (
-          <>
-            <ContractTable
-              contracts={contracts}
-              portfolioContractIds={portfolioContractIds}
-              updatingContractIds={portfolioUpdatingIds}
-              onAddToPortfolio={handleAddToPortfolio}
-              selectedCompareIds={selectedCompareIds}
-              isCompareSelectionFull={isCompareSelectionFull}
-              onToggleCompare={handleToggleCompare}
-            />
-            <ContractCards
-              contracts={contracts}
-              portfolioContractIds={portfolioContractIds}
-              updatingContractIds={portfolioUpdatingIds}
-              onAddToPortfolio={handleAddToPortfolio}
-              selectedCompareIds={selectedCompareIds}
-              isCompareSelectionFull={isCompareSelectionFull}
-              onToggleCompare={handleToggleCompare}
-            />
-          </>
         )}
       </section>
-
-      <PortfolioBuilder
-        holdings={portfolioHoldings}
-        metrics={portfolioMetrics}
-        status={portfolioStatus}
-        errorMessage={portfolioErrorMessage}
-        onRetry={loadPortfolio}
-        onRemove={handleRemoveFromPortfolio}
-        removingIds={portfolioUpdatingIds}
-      />
     </div>
   );
 };
