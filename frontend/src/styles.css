@@ -72,6 +72,118 @@ p {
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 }
 
+.comparisonCard {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.comparisonHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.comparisonActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparisonSelections {
+  margin-bottom: 12px;
+}
+
+.comparisonChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.comparisonChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  background: #ffffff;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #1f2937;
+}
+
+.comparisonChip span {
+  font-weight: 700;
+}
+
+.comparisonHint {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.comparisonMetrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.comparisonMetric {
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.comparisonTableWrapper {
+  overflow-x: auto;
+}
+
+.comparisonTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  background: #ffffff;
+}
+
+.comparisonTable th,
+.comparisonTable td {
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.compareValueMax {
+  color: #1d4ed8;
+  font-weight: 700;
+  background: #eff6ff;
+}
+
+.compareValueMin {
+  color: #b42318;
+  font-weight: 700;
+  background: #fff1f0;
+}
+
+.compareToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #475467;
+}
+
+.compareToggle input {
+  accent-color: #2563eb;
+}
+
 .sectionHeader {
   display: flex;
   flex-wrap: wrap;
@@ -428,6 +540,8 @@ p {
   margin-top: 16px;
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .cardLabel {
