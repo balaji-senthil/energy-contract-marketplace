@@ -7,9 +7,13 @@ Browse, filter, and compare energy supply contracts, then build a portfolio with
 - Filtering by energy type, price, quantity, location, and delivery dates.
 - Portfolio builder with total cost, capacity, and weighted averages.
 - Side-by-side contract comparison (2-3 contracts).
+- Sorting and pagination support on contract listings.
+- Dashboard insights with status, delivery, and energy mix visuals.
+- Loading and error states across contracts, filters, and portfolio.
 
 ## Tech Stack
 - Frontend: React + TypeScript + Vite
+- UI/Charts: MUI X Charts
 - Backend: FastAPI (Python 3.11+) + SQLAlchemy 2.0
 - Database: PostgreSQL 16
 - Containerization: Docker Compose
@@ -70,6 +74,13 @@ Prerequisites: Python 3.11+.
 
 API docs: `http://localhost:8000/docs`
 
+### 2.1) Backend Tests
+Prerequisites: Python 3.11+ and a running database with schema/seed applied.
+
+1. Run tests:
+   - `cd backend`
+   - `pytest`
+
 ### 3) Frontend (React)
 Prerequisites: Node.js 20+.
 
@@ -98,7 +109,7 @@ Base URL: `http://localhost:8000`
 - `GET /contracts`  
   Query params: `energy_types`, `price_min`, `price_max`, `quantity_min`,
   `quantity_max`, `location`, `delivery_start_from`, `delivery_end_to`,
-  `status`, `search`, `offset`, `limit`
+  `status`, `search`, `sort_by`, `sort_direction`, `offset`, `limit`
 - `GET /contracts/{contract_id}`
 - `POST /contracts`
 - `PATCH /contracts/{contract_id}`
