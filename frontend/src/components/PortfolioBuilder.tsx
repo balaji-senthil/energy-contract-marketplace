@@ -3,7 +3,7 @@ import type { PortfolioHolding, PortfolioMetrics } from "../types/contracts";
 import { formatCurrency, formatDate, formatDateRange, formatNumber } from "../utils/format";
 import RefreshIcon from "../ui/RefreshIcon";
 import StatusBadge from "../ui/StatusBadge";
-
+import RemoveIcon from "../ui/RemoveIcon";
 type LoadState = "idle" | "loading" | "success" | "error";
 
 interface PortfolioBuilderProps {
@@ -26,7 +26,7 @@ const PortfolioBuilder = ({
   onRemove,
   removingIds,
   variant = "standalone", // standalone can be used if we need to pop out the portfolio builder into a modal
-}: PortfolioBuilderProps) => {
+}: PortfolioBuilderProps) => {  
   const hasHoldings = holdings.length > 0;
   const hasMetrics = metrics !== null;
   const breakdown = metrics?.breakdown_by_energy_type ?? [];
@@ -223,12 +223,14 @@ const PortfolioBuilder = ({
                       <td>{formatDate(holding.added_at)}</td>
                       <td>
                         <button
-                          className="dangerButton"
+                          className="dangerButton iconButton"
                           type="button"
                           onClick={() => onRemove(holding.contract.id)}
                           disabled={removingIds.has(holding.contract.id)}
+                          aria-label="Remove contract"
+                          title="Remove contract"
                         >
-                          {removingIds.has(holding.contract.id) ? "Removing..." : "Remove"}
+                          {removingIds.has(holding.contract.id) ? "Removing..." : <RemoveIcon />}
                         </button>
                       </td>
                     </tr>
@@ -283,12 +285,14 @@ const PortfolioBuilder = ({
                   </div>
                   <div className="cardActions">
                     <button
-                      className="dangerButton"
+                      className="dangerButton iconButton"
                       type="button"
                       onClick={() => onRemove(holding.contract.id)}
                       disabled={removingIds.has(holding.contract.id)}
+                      aria-label="Remove contract"
+                      title="Remove contract"
                     >
-                      {removingIds.has(holding.contract.id) ? "Removing..." : "Remove"}
+                      {removingIds.has(holding.contract.id) ? "Removing..." : <RemoveIcon />}
                     </button>
                   </div>
                 </article>
