@@ -53,9 +53,19 @@ const DashboardView = ({
     return capacity > 0 ? cost / capacity : 0;
   });
   const liquiditySeries = [
-    { id: "available", value: contractStatusCounts.available, label: "Available" },
-    { id: "reserved", value: contractStatusCounts.reserved, label: "Reserved" },
-    { id: "sold", value: contractStatusCounts.sold, label: "Sold" },
+    {
+      id: "available",
+      value: contractStatusCounts.available,
+      label: "Available",
+      color: "#22c55e",
+    },
+    {
+      id: "reserved",
+      value: contractStatusCounts.reserved,
+      label: "Reserved",
+      color: "#ffb422",
+    },
+    { id: "sold", value: contractStatusCounts.sold, label: "Sold", color: "#ef4444" },
   ];
   const liquidityTotal = liquiditySeries.reduce((sum, item) => sum + item.value, 0);
 
