@@ -273,23 +273,6 @@ const App = () => {
   const isCompareSelectionFull = compareIds.length >= 3;
 
   const portfolioBreakdown = portfolioMetrics?.breakdown_by_energy_type ?? [];
-  const breakdownTotals = useMemo(() => {
-    if (!portfolioBreakdown.length) {
-      return {
-        totalCapacity: 0,
-        totalCost: 0,
-      };
-    }
-    return portfolioBreakdown.reduce(
-      (acc, item) => {
-        acc.totalCapacity += Number(item.total_capacity_mwh) || 0;
-        acc.totalCost += Number(item.total_cost) || 0;
-        return acc;
-      },
-      { totalCapacity: 0, totalCost: 0 },
-    );
-  }, [portfolioBreakdown]);
-
   const deliveryInsights = useMemo(() => {
     if (contracts.length === 0) {
       return null;
@@ -573,7 +556,6 @@ const App = () => {
             portfolioMetrics={portfolioMetrics}
             contractStatusCounts={contractStatusCounts}
             portfolioBreakdown={portfolioBreakdown}
-            breakdownTotals={breakdownTotals}
             deliveryInsights={deliveryInsights}
           />
         )}

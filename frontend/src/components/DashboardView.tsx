@@ -1,3 +1,4 @@
+import { BarChart, PieChart } from "@mui/x-charts";
 import { formatCurrency } from "../utils/format";
 import type { PortfolioEnergyBreakdown, PortfolioMetrics } from "../types/contracts";
 
@@ -21,10 +22,6 @@ interface DashboardViewProps {
     sold: number;
   };
   portfolioBreakdown: PortfolioEnergyBreakdown[];
-  breakdownTotals: {
-    totalCapacity: number;
-    totalCost: number;
-  };
   deliveryInsights: DeliveryInsights | null;
 }
 
@@ -36,12 +33,29 @@ const DashboardView = ({
   portfolioMetrics,
   contractStatusCounts,
   portfolioBreakdown,
-  breakdownTotals,
   deliveryInsights,
 }: DashboardViewProps) => {
   const isContractReady = status === "success";
   const isPortfolioReady = portfolioStatus === "success";
   const hasContracts = isContractReady && contractCount > 0;
+  const hasPortfolioBreakdown = portfolioBreakdown.length > 0;
+
+  const energyMixSeries = portfolioBreakdown.map((item) => ({
+    id: item.energy_type,
+    value: Number(item.total_capacity_mwh) || 0,
+    label: item.energy_type,
+  }));
+  const costIntensityLabels = portfolioBreakdown.map((item) => item.energy_type);
+  const costIntensitySeries = portfolioBreakdown.map((item) => {
+    const capacity = Number(item.total_capacity_mwh) || 0;
+    const cost = Number(item.total_cost) || 0;
+    return capacity > 0 ? cost / capacity : 0;
+  });
+  const liquiditySeries = [
+    { id: "available", value: contractStatusCounts.available, label: "Available" },
+    { id: "reserved", value: contractStatusCounts.reserved, label: "Reserved" },
+    { id: "sold", value: contractStatusCounts.sold, label: "Sold" },
+  ];
 
   return (
     <section className="dashboardView">
@@ -85,30 +99,21 @@ const DashboardView = ({
             <h3>Energy mix</h3>
             <p className="sectionMeta">Capacity distribution by energy type.</p>
           </div>
-          {portfolioBreakdown.length === 0 && (
+          {!hasPortfolioBreakdown && (
             <p className="asidePlaceholder">Add holdings to see your energy mix.</p>
           )}
-          {portfolioBreakdown.length > 0 && (
-            <div className="barList">
-              {portfolioBreakdown.map((item) => {
-                const capacity = Number(item.total_capacity_mwh) || 0;
-                const percentage =
-                  breakdownTotals.totalCapacity > 0
-                    ? Math.round((capacity / breakdownTotals.totalCapacity) * 100)
-                    : 0;
-                return (
-                  <div className="barRow" key={item.energy_type}>
-                    <div className="barRowHeader">
-                      <span>{item.energy_type}</span>
-                      <span>{percentage}%</span>
-                    </div>
-                    <div className="barTrack">
-                      <span style={{ width: `${percentage}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {hasPortfolioBreakdown && (
+            <PieChart
+              series={[
+                {
+                  data: energyMixSeries,
+                  innerRadius: 50,
+                  paddingAngle: 2,
+                  cornerRadius: 4,
+                },
+              ]}
+              height={220}
+            />
           )}
         </div>
 
@@ -117,32 +122,20 @@ const DashboardView = ({
             <h3>Cost intensity</h3>
             <p className="sectionMeta">Cost per MWh by energy type.</p>
           </div>
-          {portfolioBreakdown.length === 0 && (
+          {!hasPortfolioBreakdown && (
             <p className="asidePlaceholder">Portfolio data needed for cost intensity.</p>
           )}
-          {portfolioBreakdown.length > 0 && (
-            <div className="barList">
-              {portfolioBreakdown.map((item) => {
-                const capacity = Number(item.total_capacity_mwh) || 0;
-                const cost = Number(item.total_cost) || 0;
-                const unitCost = capacity > 0 ? cost / capacity : 0;
-                const percentage =
-                  breakdownTotals.totalCost > 0
-                    ? Math.round((cost / breakdownTotals.totalCost) * 100)
-                    : 0;
-                return (
-                  <div className="barRow" key={item.energy_type}>
-                    <div className="barRowHeader">
-                      <span>{item.energy_type}</span>
-                      <span>{formatCurrency(unitCost)}</span>
-                    </div>
-                    <div className="barTrack barTrackMuted">
-                      <span style={{ width: `${percentage}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {hasPortfolioBreakdown && (
+            <BarChart
+              xAxis={[{ scaleType: "band", data: costIntensityLabels }]}
+              series={[
+                {
+                  data: costIntensitySeries,
+                  valueFormatter: (value) => formatCurrency(value ?? 0),
+                },
+              ]}
+              height={220}
+            />
           )}
         </div>
 
@@ -184,32 +177,22 @@ const DashboardView = ({
             <h3>Market liquidity</h3>
             <p className="sectionMeta">Availability mix across the book.</p>
           </div>
-          <div className="stackBar">
-            <span
-              className="stackFill stackAvailable"
-              style={{
-                width: hasContracts
-                  ? `${(contractStatusCounts.available / contractCount) * 100}%`
-                  : "0%",
-              }}
+          {!hasContracts && (
+            <p className="asidePlaceholder">Contracts data needed for liquidity mix.</p>
+          )}
+          {hasContracts && (
+            <PieChart
+              series={[
+                {
+                  data: liquiditySeries,
+                  innerRadius: 50,
+                  paddingAngle: 2,
+                  cornerRadius: 4,
+                },
+              ]}
+              height={220}
             />
-            <span
-              className="stackFill stackReserved"
-              style={{
-                width: hasContracts
-                  ? `${(contractStatusCounts.reserved / contractCount) * 100}%`
-                  : "0%",
-              }}
-            />
-            <span
-              className="stackFill stackSold"
-              style={{
-                width: hasContracts
-                  ? `${(contractStatusCounts.sold / contractCount) * 100}%`
-                  : "0%",
-              }}
-            />
-          </div>
+          )}
           <div className="stackLegend">
             {isContractReady ? (
               <>
