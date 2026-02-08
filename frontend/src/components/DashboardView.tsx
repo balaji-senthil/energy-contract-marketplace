@@ -45,6 +45,7 @@ const DashboardView = ({
     value: Number(item.total_capacity_mwh) || 0,
     label: item.energy_type,
   }));
+  const energyMixTotal = energyMixSeries.reduce((sum, item) => sum + item.value, 0);
   const costIntensityLabels = portfolioBreakdown.map((item) => item.energy_type);
   const costIntensitySeries = portfolioBreakdown.map((item) => {
     const capacity = Number(item.total_capacity_mwh) || 0;
@@ -56,6 +57,7 @@ const DashboardView = ({
     { id: "reserved", value: contractStatusCounts.reserved, label: "Reserved" },
     { id: "sold", value: contractStatusCounts.sold, label: "Sold" },
   ];
+  const liquidityTotal = liquiditySeries.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <section className="dashboardView">
@@ -113,6 +115,10 @@ const DashboardView = ({
                   innerRadius: 50,
                   paddingAngle: 2,
                   cornerRadius: 4,
+                  arcLabel: (item) =>
+                    energyMixTotal > 0
+                      ? `${Math.round((item.value / energyMixTotal) * 100)}%`
+                      : "0%",
                 },
               ]}
               height={220}
@@ -200,6 +206,10 @@ const DashboardView = ({
                   innerRadius: 50,
                   paddingAngle: 2,
                   cornerRadius: 4,
+                  arcLabel: (item) =>
+                    liquidityTotal > 0
+                      ? `${Math.round((item.value / liquidityTotal) * 100)}%`
+                      : "0%",
                 },
               ]}
               height={220}
