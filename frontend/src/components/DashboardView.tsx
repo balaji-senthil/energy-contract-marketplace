@@ -154,6 +154,7 @@ const DashboardView = ({
                 {
                   data: costIntensitySeries,
                   valueFormatter: (value) => formatCurrency(value ?? 0),
+                  barLabel: (item) => formatCurrency(item.value ?? 0),
                 },
               ]}
               height={220}
