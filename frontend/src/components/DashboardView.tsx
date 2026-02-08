@@ -96,8 +96,11 @@ const DashboardView = ({
       <section className="insightsGrid" aria-label="Market insights">
         <div className="insightCard">
           <div className="insightHeader">
-            <h3>Energy mix</h3>
-            <p className="sectionMeta">Capacity distribution by energy type.</p>
+            <div className="insightTitle">
+              <h3>Energy mix</h3>
+              <span className="insightBadge insightBadgePortfolio">Portfolio</span>
+            </div>
+            <p className="sectionMeta">Capacity distribution by energy type (MWh).</p>
           </div>
           {!hasPortfolioBreakdown && (
             <p className="asidePlaceholder">Add holdings to see your energy mix.</p>
@@ -119,7 +122,10 @@ const DashboardView = ({
 
         <div className="insightCard">
           <div className="insightHeader">
-            <h3>Cost intensity</h3>
+            <div className="insightTitle">
+              <h3>Cost intensity</h3>
+              <span className="insightBadge insightBadgePortfolio">Portfolio</span>
+            </div>
             <p className="sectionMeta">Cost per MWh by energy type.</p>
           </div>
           {!hasPortfolioBreakdown && (
@@ -141,7 +147,10 @@ const DashboardView = ({
 
         <div className="insightCard">
           <div className="insightHeader">
-            <h3>Delivery horizon</h3>
+            <div className="insightTitle">
+              <h3>Delivery horizon</h3>
+              <span className="insightBadge insightBadgeContracts">Contracts</span>
+            </div>
             <p className="sectionMeta">Earliest to latest delivery window.</p>
           </div>
           {deliveryInsights ? (
@@ -174,7 +183,10 @@ const DashboardView = ({
 
         <div className="insightCard">
           <div className="insightHeader">
-            <h3>Market liquidity</h3>
+            <div className="insightTitle">
+              <h3>Market liquidity</h3>
+              <span className="insightBadge insightBadgeContracts">Contracts</span>
+            </div>
             <p className="sectionMeta">Availability mix across the book.</p>
           </div>
           {!hasContracts && (
