@@ -77,13 +77,15 @@ const ContractCards = ({
                 portfolioContractIds.has(contract.id) ||
                 updatingContractIds.has(contract.id)
               }
+              aria-label="Add to portfolio"
+              title="Add to portfolio"
             >
               {updatingContractIds.has(contract.id)
                 ? "Adding..."
                 : portfolioContractIds.has(contract.id)
                   ? "In portfolio"
                   : contract.status === "Available"
-                    ? "Add to Portfolio"
+                    ? "+"
                     : "Unavailable"}
             </button>
           </div>
