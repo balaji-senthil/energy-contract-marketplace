@@ -13,6 +13,7 @@ import {
   fetchPortfolioMetrics,
   removeContractFromPortfolio,
 } from "./api/portfolioApi";
+import { formatCurrency } from "./utils/format";
 import type {
   Contract,
   ContractApiFilters,
@@ -25,7 +26,7 @@ import type {
 import { PRICE_RANGE, QUANTITY_RANGE } from "./constants/filters";
 
 type LoadState = "idle" | "loading" | "success" | "error";
-type ActiveTab = "contracts" | "portfolio";
+type ViewTab = "dashboard" | "contracts" | "portfolio";
 
 const PORTFOLIO_USER_ID = 1;
 
@@ -70,7 +71,7 @@ const App = () => {
   const [compareStatus, setCompareStatus] = useState<LoadState>("idle");
   const [compareErrorMessage, setCompareErrorMessage] = useState<string | null>(null);
   const [comparison, setComparison] = useState<ContractComparisonResponse | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("contracts");
+  const [viewTab, setViewTab] = useState<ViewTab>("dashboard");
 
   const loadContracts = useCallback(
     async ({
@@ -179,15 +180,27 @@ const App = () => {
     }
     return `Contracts (${contracts.length})`;
   }, [contracts.length, status]);
-  
-  const portfolioTabLabel = useMemo(() => {
-    if (portfolioStatus !== "success") {
-      return "Portfolio";
-    }
-    return `Portfolio (${portfolioHoldings.length})`;
-  }, [portfolioHoldings.length, portfolioStatus]);
-  
+
   const matchingCount = status === "success" ? contracts.length : null;
+
+  const contractStatusCounts = useMemo(() => {
+    if (status !== "success") {
+      return {
+        available: 0,
+        reserved: 0,
+        sold: 0,
+      };
+    }
+    return contracts.reduce(
+      (acc, contract) => {
+        if (contract.status === "Available") acc.available += 1;
+        if (contract.status === "Reserved") acc.reserved += 1;
+        if (contract.status === "Sold") acc.sold += 1;
+        return acc;
+      },
+      { available: 0, reserved: 0, sold: 0 },
+    );
+  }, [contracts, status]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -258,6 +271,63 @@ const App = () => {
 
   const selectedCompareIds = useMemo(() => new Set(compareIds), [compareIds]);
   const isCompareSelectionFull = compareIds.length >= 3;
+
+  const portfolioBreakdown = portfolioMetrics?.breakdown_by_energy_type ?? [];
+  const breakdownTotals = useMemo(() => {
+    if (!portfolioBreakdown.length) {
+      return {
+        totalCapacity: 0,
+        totalCost: 0,
+      };
+    }
+    return portfolioBreakdown.reduce(
+      (acc, item) => {
+        acc.totalCapacity += Number(item.total_capacity_mwh) || 0;
+        acc.totalCost += Number(item.total_cost) || 0;
+        return acc;
+      },
+      { totalCapacity: 0, totalCost: 0 },
+    );
+  }, [portfolioBreakdown]);
+
+  const deliveryInsights = useMemo(() => {
+    if (contracts.length === 0) {
+      return null;
+    }
+    const startDates = contracts
+      .map((contract) => new Date(contract.delivery_start))
+      .filter((date) => !Number.isNaN(date.getTime()));
+    const endDates = contracts
+      .map((contract) => new Date(contract.delivery_end))
+      .filter((date) => !Number.isNaN(date.getTime()));
+    if (startDates.length === 0 || endDates.length === 0) {
+      return null;
+    }
+    const earliestStart = new Date(Math.min(...startDates.map((date) => date.getTime())));
+    const latestEnd = new Date(Math.max(...endDates.map((date) => date.getTime())));
+    const durationSummary = contracts.reduce(
+      (acc, contract) => {
+        const start = new Date(contract.delivery_start).getTime();
+        const end = new Date(contract.delivery_end).getTime();
+        if (Number.isNaN(start) || Number.isNaN(end)) {
+          return acc;
+        }
+        acc.totalDays += (end - start) / (1000 * 60 * 60 * 24);
+        acc.validCount += 1;
+        return acc;
+      },
+      { totalDays: 0, validCount: 0 },
+    );
+    const avgDurationDays =
+      durationSummary.validCount > 0
+        ? Math.round(durationSummary.totalDays / durationSummary.validCount)
+        : 0;
+    return {
+      earliestStart,
+      latestEnd,
+      avgDurationDays,
+    };
+  }, [contracts]);
 
   const loadPortfolio = useCallback(async () => {
     try {
@@ -435,17 +505,22 @@ const App = () => {
   }, [appliedFilters, loadContracts, loadPortfolio]);
 
   return (
-    <div className="appShell">
-      <header className="hero">
-        <div>
-          <p className="eyebrow">Energy Contract Marketplace</p>
-          <h1>Contract Browsing & Management</h1>
+    <div className="appShell dashboardShell">
+      <header className="topbar">
+        <div className="topbarTitle">
+          <h1>Energy Contract Marketplace</h1>
           <p className="subtitle">
-            Browse current availability across energy types, quantities, and delivery
-            windows.
+            Live contract availability, deal comparison, and portfolio monitoring in
+            one workspace.
           </p>
         </div>
-        <div className="heroActions">
+        <div className="topbarActions">
+          <div className="pageMeta">
+            <p className="pageMetaLabel">Last sync</p>
+            <p className="pageMetaValue">
+              {lastUpdated ? lastUpdated.toLocaleTimeString("en-US") : "Not synced"}
+            </p>
+          </div>
           <button
             className="secondaryButton iconButton"
             onClick={handleRefreshAll}
@@ -455,53 +530,243 @@ const App = () => {
           >
             <RefreshIcon className="refreshIcon" />
           </button>
-          {lastUpdated && (
-            <p className="lastUpdated">
-              Updated {lastUpdated.toLocaleTimeString("en-US")}
-            </p>
-          )}
         </div>
       </header>
 
-      <section className="contentCard">
-        <div className="tabsToolbar">
+      <section className="workspaceCard">
+        <div className="workspaceHeader">
           <div>
-            <h2>Marketplace Workspace</h2>
-            <p className="sectionMeta">
-              Switch between contracts and your portfolio without losing context.
-            </p>
+            <h2>Workspace</h2>
+            <p className="sectionMeta">Switch views without losing your context.</p>
           </div>
-          <div className="tabs" role="tablist" aria-label="Marketplace views">
+          <nav className="menuTabs" aria-label="Workspace views">
             <button
-              className={`tabButton ${activeTab === "contracts" ? "tabButtonActive" : ""}`}
-              id="tab-contracts"
-              role="tab"
-              aria-selected={activeTab === "contracts"}
-              aria-controls="panel-contracts"
+              className={`menuTab ${viewTab === "dashboard" ? "menuTabActive" : ""}`}
               type="button"
-              onClick={() => setActiveTab("contracts")}
+              onClick={() => setViewTab("dashboard")}
             >
-              {resultCountLabel}
+              Dashboard
             </button>
             <button
-              className={`tabButton ${activeTab === "portfolio" ? "tabButtonActive" : ""}`}
-              id="tab-portfolio"
-              role="tab"
-              aria-selected={activeTab === "portfolio"}
-              aria-controls="panel-portfolio"
+              className={`menuTab ${viewTab === "contracts" ? "menuTabActive" : ""}`}
               type="button"
-              onClick={() => setActiveTab("portfolio")}
+              onClick={() => setViewTab("contracts")}
             >
-              {portfolioTabLabel}
+              Contracts
             </button>
-          </div>
+            <button
+              className={`menuTab ${viewTab === "portfolio" ? "menuTabActive" : ""}`}
+              type="button"
+              onClick={() => setViewTab("portfolio")}
+            >
+              Portfolio
+            </button>
+          </nav>
         </div>
 
-        {activeTab === "contracts" && (
-          <div className="tabPanel" role="tabpanel" id="panel-contracts" aria-labelledby="tab-contracts">
+        {viewTab === "dashboard" && (
+          <section className="dashboardView">
+          <section className="statGrid statRow" aria-label="Portfolio pulse">
+            <div className="statCard">
+              <p className="statLabel">Portfolio pulse</p>
+              <p className="statValue">
+                {portfolioMetrics
+                  ? formatCurrency(portfolioMetrics.weighted_avg_price_per_mwh)
+                  : "—"}
+              </p>
+              <p className="statMeta">Weighted avg price / MWh</p>
+            </div>
+            <div className="statCard">
+              <p className="statLabel">Active contracts</p>
+              <p className="statValue">{status === "success" ? contracts.length : "—"}</p>
+              <p className="statMeta">
+                {status === "success" ? `${contractStatusCounts.available} available` : "—"}
+              </p>
+            </div>
+            <div className="statCard">
+              <p className="statLabel">Reserved</p>
+              <p className="statValue">
+                {status === "success" ? contractStatusCounts.reserved : "—"}
+              </p>
+              <p className="statMeta">Awaiting approval</p>
+            </div>
+            <div className="statCard">
+              <p className="statLabel">Sold</p>
+              <p className="statValue">
+                {status === "success" ? contractStatusCounts.sold : "—"}
+              </p>
+              <p className="statMeta">Closed deals</p>
+            </div>
+            <div className="statCard">
+              <p className="statLabel">Portfolio holdings</p>
+              <p className="statValue">
+                {portfolioStatus === "success" ? portfolioHoldings.length : "—"}
+              </p>
+              <p className="statMeta">Tracked contracts</p>
+            </div>
+          </section>
+
+          <section className="insightsGrid" aria-label="Market insights">
+            <div className="insightCard">
+              <div className="insightHeader">
+                <h3>Energy mix</h3>
+                <p className="sectionMeta">Capacity distribution by energy type.</p>
+              </div>
+              {portfolioBreakdown.length === 0 && (
+                <p className="asidePlaceholder">Add holdings to see your energy mix.</p>
+              )}
+              {portfolioBreakdown.length > 0 && (
+                <div className="barList">
+                  {portfolioBreakdown.map((item) => {
+                    const capacity = Number(item.total_capacity_mwh) || 0;
+                    const percentage =
+                      breakdownTotals.totalCapacity > 0
+                        ? Math.round((capacity / breakdownTotals.totalCapacity) * 100)
+                        : 0;
+                    return (
+                      <div className="barRow" key={item.energy_type}>
+                        <div className="barRowHeader">
+                          <span>{item.energy_type}</span>
+                          <span>{percentage}%</span>
+                        </div>
+                        <div className="barTrack">
+                          <span style={{ width: `${percentage}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="insightCard">
+              <div className="insightHeader">
+                <h3>Cost intensity</h3>
+                <p className="sectionMeta">Cost per MWh by energy type.</p>
+              </div>
+              {portfolioBreakdown.length === 0 && (
+                <p className="asidePlaceholder">Portfolio data needed for cost intensity.</p>
+              )}
+              {portfolioBreakdown.length > 0 && (
+                <div className="barList">
+                  {portfolioBreakdown.map((item) => {
+                    const capacity = Number(item.total_capacity_mwh) || 0;
+                    const cost = Number(item.total_cost) || 0;
+                    const unitCost = capacity > 0 ? cost / capacity : 0;
+                    const percentage =
+                      breakdownTotals.totalCost > 0
+                        ? Math.round((cost / breakdownTotals.totalCost) * 100)
+                        : 0;
+                    return (
+                      <div className="barRow" key={item.energy_type}>
+                        <div className="barRowHeader">
+                          <span>{item.energy_type}</span>
+                          <span>{formatCurrency(unitCost)}</span>
+                        </div>
+                        <div className="barTrack barTrackMuted">
+                          <span style={{ width: `${percentage}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="insightCard">
+              <div className="insightHeader">
+                <h3>Delivery horizon</h3>
+                <p className="sectionMeta">Earliest to latest delivery window.</p>
+              </div>
+              {deliveryInsights ? (
+                <>
+                  <div className="timelineGrid">
+                    <span className="timelineLabel">Start</span>
+                    <div className="timelineBar" aria-hidden="true" />
+                    <span className="timelineLabel timelineLabelRight">End</span>
+                    <span className="timelineValue">
+                      {deliveryInsights.earliestStart.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <span className="timelineValue timelineValueCenter">
+                      {deliveryInsights.avgDurationDays} days avg
+                    </span>
+                    <span className="timelineValue timelineValueRight">
+                      {deliveryInsights.latestEnd.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <p className="asidePlaceholder">Contracts data needed for delivery range.</p>
+              )}
+            </div>
+
+            <div className="insightCard">
+              <div className="insightHeader">
+                <h3>Market liquidity</h3>
+                <p className="sectionMeta">Availability mix across the book.</p>
+              </div>
+              <div className="stackBar">
+                <span
+                  className="stackFill stackAvailable"
+                  style={{
+                    width:
+                      status === "success" && contracts.length > 0
+                        ? `${(contractStatusCounts.available / contracts.length) * 100}%`
+                        : "0%",
+                  }}
+                />
+                <span
+                  className="stackFill stackReserved"
+                  style={{
+                    width:
+                      status === "success" && contracts.length > 0
+                        ? `${(contractStatusCounts.reserved / contracts.length) * 100}%`
+                        : "0%",
+                  }}
+                />
+                <span
+                  className="stackFill stackSold"
+                  style={{
+                    width:
+                      status === "success" && contracts.length > 0
+                        ? `${(contractStatusCounts.sold / contracts.length) * 100}%`
+                        : "0%",
+                  }}
+                />
+              </div>
+              <div className="stackLegend">
+                {status === "success" ? (
+                  <>
+                    <span>Available {contractStatusCounts.available}</span>
+                    <span>Reserved {contractStatusCounts.reserved}</span>
+                    <span>Sold {contractStatusCounts.sold}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Available —</span>
+                    <span>Reserved —</span>
+                    <span>Sold —</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+        </section>
+        )}
+
+        {viewTab === "contracts" && (
+          <div className="tabPanel">
             <div className="sectionHeader">
               <div>
-                <h3>{resultCountLabel}</h3>
+                <h2>{resultCountLabel}</h2>
                 <p className="sectionMeta">View full contract details at a glance.</p>
               </div>
               <button
@@ -595,8 +860,8 @@ const App = () => {
           </div>
         )}
 
-        {activeTab === "portfolio" && (
-          <div className="tabPanel" role="tabpanel" id="panel-portfolio" aria-labelledby="tab-portfolio">
+        {viewTab === "portfolio" && (
+          <div className="tabPanel">
             <PortfolioBuilder
               holdings={portfolioHoldings}
               metrics={portfolioMetrics}
