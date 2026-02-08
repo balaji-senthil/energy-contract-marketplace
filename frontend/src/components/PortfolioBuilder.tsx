@@ -92,7 +92,7 @@ const PortfolioBuilder = ({
 
       {status === "success" && !hasHoldings && (
         <p className="statusMessage">
-          No contracts in the portfolio yet. Add one from the list above.
+          No contracts in the portfolio yet. Add one from the Contracts list (Go to Contracts tab).
         </p>
       )}
 
