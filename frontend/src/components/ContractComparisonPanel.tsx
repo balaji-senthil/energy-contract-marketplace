@@ -45,10 +45,6 @@ const ContractComparisonPanel = ({
       <div className="comparisonHeader">
         <div>
           <p className="eyebrow">Contract Comparison</p>
-          <h3>Compare 2-3 contracts side-by-side</h3>
-          <p className="sectionMeta">
-            Highlight differences in price, quantity, and delivery duration.
-          </p>
         </div>
         <div className="comparisonActions">
           <button
