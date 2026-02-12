@@ -236,16 +236,18 @@ const App = () => {
     const priceMax = Number.parseFloat(filters.priceMax);
     const quantityMin = Number.parseFloat(filters.quantityMin);
     const quantityMax = Number.parseFloat(filters.quantityMax);
-    if (!Number.isNaN(priceMin) && priceMin > PRICE_RANGE.min) {
+    const isValidPriceRangeChange = priceMin !== 0
+    if (!Number.isNaN(priceMin) && (priceMin >= PRICE_RANGE.min && isValidPriceRangeChange)) {
       nextFilters.price_min = priceMin;
     }
-    if (!Number.isNaN(priceMax) && priceMax < PRICE_RANGE.max) {
+    if (!Number.isNaN(priceMax) && (priceMax <= PRICE_RANGE.max && isValidPriceRangeChange)) {
       nextFilters.price_max = priceMax;
     }
-    if (!Number.isNaN(quantityMin) && quantityMin > QUANTITY_RANGE.min) {
+    const isValidQtyRangeChange = quantityMin !== 0
+    if (!Number.isNaN(quantityMin) && (quantityMin >= QUANTITY_RANGE.min && isValidQtyRangeChange)) {
       nextFilters.quantity_min = quantityMin;
     }
-    if (!Number.isNaN(quantityMax) && quantityMax < QUANTITY_RANGE.max) {
+    if (!Number.isNaN(quantityMax) && (quantityMax <= QUANTITY_RANGE.max && isValidQtyRangeChange)) {
       nextFilters.quantity_max = quantityMax;
     }
     const location = filters.location.trim();

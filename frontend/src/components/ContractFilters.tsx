@@ -80,7 +80,7 @@ const ContractFilters = ({
   const handlePriceMinChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValue = Number(event.target.value);
     // Keep min at or below current max to avoid crossing sliders.
-    const clampedValue = Math.min(nextValue, priceMaxValue);
+    const clampedValue = priceMaxValue > 0 ? Math.min(nextValue, priceMaxValue) : nextValue;
     onFiltersChange({ ...filters, priceMin: String(clampedValue) });
   };
 
@@ -94,7 +94,7 @@ const ContractFilters = ({
   const handleQuantityMinChange = (event: ChangeEvent<HTMLInputElement>) => {
     const nextValue = Number(event.target.value);
     // Keep min at or below current max to avoid crossing sliders.
-    const clampedValue = Math.min(nextValue, quantityMaxValue);
+    const clampedValue = quantityMaxValue ? Math.min(nextValue, quantityMaxValue) : quantityMinValue
     onFiltersChange({ ...filters, quantityMin: String(clampedValue) });
   };
 
@@ -307,6 +307,7 @@ const ContractFilters = ({
                 max={PRICE_RANGE.max}
                 step={PRICE_RANGE.step}
                 value={priceMaxValue}
+                disabled={!priceMinValue}
                 onChange={handlePriceMaxChange}
                 aria-label="Maximum price per MWh"
               />
@@ -340,6 +341,7 @@ const ContractFilters = ({
                 max={QUANTITY_RANGE.max}
                 step={QUANTITY_RANGE.step}
                 value={quantityMaxValue}
+                disabled={!quantityMinValue}
                 onChange={handleQuantityMaxChange}
                 aria-label="Maximum quantity in MWh"
               />
